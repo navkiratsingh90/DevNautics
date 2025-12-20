@@ -253,11 +253,6 @@ export const markTaskCompleted = async (req, res) => {
     }
 };
 
-// get completed tasks at any moment
-
-// get tasks acc to priority
-
-// make changes in project like changing its commit, change its timeline , status, marking updations
 export const updateProject = async (req, res) => {
     try {
         const { projectId } = req.params;
@@ -285,8 +280,6 @@ export const updateProject = async (req, res) => {
 };
 
 
-
-// get any tracker by id
 export const getProjectById = async (req, res) => {
     try {
         const { projectId } = req.params;

@@ -34,6 +34,7 @@ import DailyCodingChallenge from "./components/DailyCodingChallenge";
 import CSFundamentalsProblem from "./components/CSFundamentalsChallenge";
 import AptitudeProblem from "./components/AptitudeDailyChallenge";
 import ProjectTracker from "./Pages/Project-Tracker/ProjectTracking";
+import Workspaces from "./Pages/Projects/Projects";
 // import CollabPage from "./Pages/Standalone/Collab";
 
 // import PopupForm from "./components/ui/PopupUserForm";
@@ -79,6 +80,10 @@ const router = createBrowserRouter([
   {
     path : '/events',
     element : <EventsPage/>
+  },
+  {
+    path : '/project',
+    element : <Workspaces/>
   },
   {
     path : '/project-collaboration',
