@@ -73,19 +73,23 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
 
+    if (!user.isVerified) {
+      return res.status(403).json({ msg: "Please verify your email first" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
     const token = jwt.sign(
-      { userID: user._id, email: user.email },
+      { userID: user._id },
       process.env.JWT_TOKEN,
       { expiresIn: "7d" }
     );
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -98,10 +102,10 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ msg: "Server error" });
   }
 };
+
 
 // ---------- LOGOUT ----------
 export const logoutUser = async (req, res) => {
