@@ -11,8 +11,8 @@ dotenv.config();
 const app = express();
 
 // ✅ Fix for __dirname in ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 // ✅ Middleware
 app.use(express.json());
@@ -26,20 +26,26 @@ app.use(
 );
 
 // ✅ Example of importing routes (uncomment when routes ready)
-// import authRouter from "./Routes/authRouter.js";
-// app.use("/api/auth", authRouter);
+import authRouter from './routes/auth-router.js'
+import activityRouter from './routes/activity-router.js'
+app.use("/api/auth", authRouter);
+app.use("/api/activity", activityRouter);
 
 // ✅ Serve React frontend build (for production)
-app.use(express.static(path.join(__dirname, "/frontend/dist")));
-app.get('/*splat', (_, res) => {
-  res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-});
+// app.use(express.static(path.join(__dirname, "/frontend/dist")));
+// app.get('/*splat', (_, res) => {
+//   res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+// });
 
 
 // ✅ Start server after connecting to MongoDB
+app.get("/", (req, res) => {
+  res.send("Server is running 🚀");
+});
+
 connectDb()
   .then(() => {
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 7000;
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log("✅ MongoDB connected successfully");

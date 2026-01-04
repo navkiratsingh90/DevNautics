@@ -1,20 +1,21 @@
 import Activity from '../models/activity-model.js';
 import User from '../models/user-model.js';
-import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary.js';
+import cloudinary from '../utils/cloudinary.js'
+import getDataUri from '../utils/datauri.js';
 
 /* ================= CREATE ACTIVITY ================= */
 export const createActivity = async (req, res) => {
   try {
     const { description, tags } = req.body;
     let fileUrl = null;
-
+    const userId = req.user.userID || req.user._id;
     if (!description) {
       return res.status(400).json({ success: false, message: 'Description is required' });
     }
 
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer);
-      fileUrl = result.secure_url;
+      const fileUri = getDataUri(file);
+       fileUrl = await cloudinary.uploader.upload(fileUri.content);
     }
 
     const tagsArray = Array.isArray(tags)
@@ -25,13 +26,14 @@ export const createActivity = async (req, res) => {
       description,
       file: fileUrl,
       tags: tagsArray,
-      createdBy: req.user._id,
+      createdBy: userId,
     });
 
     await activity.populate('createdBy', 'name username avatar role');
 
     res.status(201).json({ success: true, data: activity });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -102,10 +104,10 @@ export const deleteActivity = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    if (activity.file) {
-      const publicId = activity.file.split('/').pop().split('.')[0];
-      await deleteFromCloudinary(publicId);
-    }
+    // if (activity.file) {
+    //   const publicId = activity.file.split('/').pop().split('.')[0];
+    //   // await deleteFromCloudinary(publicId);
+    // }
 
     await activity.deleteOne();
 
@@ -149,7 +151,7 @@ export const likeActivity = async (req, res) => {
 export const addComment = async (req, res) => {
   try {
     const { content } = req.body;
-
+    const userId = req.user.userID || req.user._id;
     if (!content) {
       return res.status(400).json({ success: false, message: 'Comment is required' });
     }
@@ -161,7 +163,7 @@ export const addComment = async (req, res) => {
     }
 
     activity.comments.push({
-      createdBy: req.user._id,
+      createdBy: userId,
       content,
     });
 
@@ -170,9 +172,11 @@ export const addComment = async (req, res) => {
 
     res.status(201).json({
       success: true,
+      activity,
       data: activity.comments.at(-1),
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

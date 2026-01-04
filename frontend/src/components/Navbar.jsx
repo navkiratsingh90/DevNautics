@@ -40,7 +40,7 @@ import { handleTheme } from "../Features/ThemeSlice";
 const Navbar5 = () => {
   const darkMode = useSelector((state) => state.Theme.darkMode)
   const dispatch = useDispatch()
-  // const [user,setuser] = useState(true)
+  const [isloggedIn,seIsLoggedIn] = useState(false)
   const features = [
     { title: "Feed", description: "See the Activity of others", href: "/activity" },
     { title: "Chatrooms", description: "get all notifications related to your profile here and Join discussions which resembles your interest", href: "/notifications" },
@@ -117,7 +117,7 @@ const Navbar5 = () => {
 
           {/* RIGHT SIDE (Auth / Avatar) */}
           <div className="hidden items-center gap-4 lg:flex">
-            {user ? (
+            {isloggedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer">
@@ -160,8 +160,8 @@ const Navbar5 = () => {
               </DropdownMenu>
             ) : (
               <>
-                <Button className="bg-blue-800 hover:bg-blue-950">Sign in</Button>
-                <Button className="bg-gray-700 hover:bg-gray-950">Start for free</Button>
+                <Link to={'/auth/login'}><Button className="bg-blue-800 hover:bg-blue-950">Sign in</Button></Link>
+                <Link to={'/auth/signup'}><Button  className="bg-gray-700 hover:bg-gray-950">Start for free</Button></Link>
               </>
             )}
           </div>

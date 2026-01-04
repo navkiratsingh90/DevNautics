@@ -21,7 +21,12 @@ router.post("/reset-password", resetPassword);
 
 // Protected test route
 router.get("/me", jwtAuth, (req, res) => {
-  res.status(200).json({ msg: "Authorized", userId: req.user });
+  console.log("reached");
+  res.status(200).json({ msg: "Authorized" });
+});
+
+router.get("/test", (req, res) => {
+  res.json({ success: true, message: "Auth API working" });
 });
 
 export default router;

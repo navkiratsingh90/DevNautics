@@ -10,7 +10,7 @@ import transporter from '../utils/nodemailer.js'
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-
+    console.log(username, email,password);
     if (!username || !email || !password)
       return res.status(400).json({ msg: "All fields required" });
 
@@ -18,25 +18,27 @@ export const registerUser = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ msg: "Email already registered" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // const hashed = await bcrypt.hash(password, 10);
+    // const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const newUser = await User.create({
-      username,
-      email,
-      password: hashed,
-      verificationCode: otp,
-      verificationExpiry: Date.now() + 10 * 60 * 1000, // 10 mins
-    });
+    // const newUser = await User.create({
+    //   username,
+    //   email,
+    //   password: hashed,
+    //   verificationCode: otp,
+    //   verificationExpiry: Date.now() + 10 * 60 * 1000, // 10 mins
+    // });
 
+    const newUser = new User({ username, password, email }); // password will be hashed in model
+    await newUser.save();
     // send verification email
-    await transporter.sendMail({
-      to: email,
-      subject: "Verify your account",
-      text: `Your verification code is ${otp}`,
-    });
+    // await transporter.sendMail({
+    //   to: email,
+    //   subject: "Verify your account",
+    //   text: `Your verification code is ${otp}`,
+    // });
 
-    res.status(200).json({ msg: "User registered. Check email for OTP." });
+    res.status(200).json({ msg: "User registered. Check email for OTP." ,data : newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: "Server error" });
@@ -73,25 +75,25 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    if (!user.isVerified) {
-      return res.status(403).json({ msg: "Please verify your email first" });
+    // if (!user.isVerified) {
+    //   return res.status(403).json({ msg: "Please verify your email first" });
+    // }
+    
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid username or password", user });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
-
-    const token = jwt.sign(
-      { userID: user._id },
-      process.env.JWT_TOKEN,
-      { expiresIn: "7d" }
-    );
-
-    res.cookie("token", token, {
+     // Generate token
+     const token = await user.generateToken();
+     res.cookie("token", token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production", // only HTTPS in prod
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      path: "/"
     });
+    
 
     res.status(200).json({
       msg: "Login successful",
@@ -100,9 +102,11 @@ export const loginUser = async (req, res) => {
         username: user.username,
         email: user.email,
       },
+      token
     });
   } catch (error) {
-    res.status(500).json({ msg: "Server error" });
+    console.error(error);
+    res.status(500).json({ msg: error});
   }
 };
 

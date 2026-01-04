@@ -3,32 +3,32 @@ import {
   createActivity,
   getActivities,
   getActivityById,
-  updateActivity,
   deleteActivity,
   likeActivity,
   addComment,
   deleteComment,
   getUserFeed,
   getTrendingActivities,
-  getActivitiesByTag
-} from '../controllers/activityController.js';
+} from '../controllers/activity-controller.js';
+import singleUpload from '../middlewares/multer-middleware.js';
+import authMiddleware from '../middlewares/auth-middleware.js';
 // import { protect } from '../middleware/authMiddleware.js';
-import { upload } from '../middleware/uploadMiddleware.js';
+// import { upload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
 // Public routes
 router.get('/', getActivities);
 router.get('/trending', getTrendingActivities);
-router.get('/tag/:tag', getActivitiesByTag);
+// router.get('/tag/:tag', getActivitiesByTag);
 router.get('/:id', getActivityById);
 
 // Protected routes
-router.post('/', upload.single('file'), createActivity);
-router.put('/:id', upload.single('file'), updateActivity);
+router.post('/create', authMiddleware , singleUpload, createActivity);
+// router.put('/:id', singleUpload, updateActivity);
 router.delete('/:id', deleteActivity);
 router.post('/:id/like', likeActivity);
-router.post('/:id/comments', addComment);
+router.post('/:id/comments',authMiddleware, addComment);
 router.delete('/:id/comments/:commentId', deleteComment);
 router.get('/feed/my', getUserFeed);
 

@@ -63,6 +63,10 @@ const userSchema = new mongoose.Schema(
 		required: true, 
 		trim: true 
 	},
+	password : {
+		type : String,
+		required : true
+	},
 	about: { 
 		type: String, 
 		default: "" 
@@ -84,12 +88,6 @@ const userSchema = new mongoose.Schema(
 		{
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Activity",
-		},
-	],
-	events: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Events",
 		},
 	],
 	projectCollaborations: [
