@@ -2,7 +2,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api/activity",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -27,7 +27,7 @@ export const createActivity = async (data) => {
 /* ================= GET ALL ACTIVITIES ================= */
 export const getActivities = async (params = {}) => {
   try {
-    const res = await API.get("/", { params });
+    const res = await API.get("/get-activities", { params });
     return res.data;
   } catch (error) {
     toast.error("Failed to load activities");
@@ -36,15 +36,15 @@ export const getActivities = async (params = {}) => {
 };
 
 /* ================= GET ACTIVITY BY ID ================= */
-// export const getActivityById = async (id) => {
-//   try {
-//     const res = await API.get(`/${id}`);
-//     return res.data;
-//   } catch (error) {
-//     toast.error("Activity not found");
-//     throw error;
-//   }
-// };
+export const getActivityById = async (id) => {
+  try {
+    const res = await API.get(`/${id}`);
+    return res.data;
+  } catch (error) {
+    toast.error("Activity not found");
+    throw error;
+  }
+};
 
 /* ================= DELETE ACTIVITY ================= */
 export const deleteActivity = async (id) => {
@@ -117,12 +117,12 @@ export const getTrendingActivities = async () => {
 };
 
 /* ================= GET ACTIVITIES BY TAG ================= */
-export const getActivitiesByTag = async (tag, params = {}) => {
-  try {
-    const res = await API.get(`/tag/${tag}`, { params });
-    return res.data;
-  } catch (error) {
-    toast.error("Failed to load tag activities");
-    throw error;
-  }
-};
+// export const getActivitiesByTag = async (tag, params = {}) => {
+//   try {
+//     const res = await API.get(`/tag/${tag}`, { params });
+//     return res.data;
+//   } catch (error) {
+//     toast.error("Failed to load tag activities");
+//     throw error;
+//   }
+// };

@@ -1,40 +1,39 @@
 import React, { useEffect, useState } from 'react'
-import { deleteActivity, getActivities, likeActivity } from '../services/activityApis'
+import { addComment, deleteActivity, getActivities, getUserFeed, likeActivity } from '../services/activityApis'
 import CommentModal from './CommentModal'
+import { IoSend } from "react-icons/io5"; // arrow icon
 
-const ActivityCard = ({posts,darkMode,activeMenu}) => {
+
+const ActivityCard = ({posts,darkMode}) => {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [activeMenu, setActiveMenu] = useState(null);
+   const [comment, setComment] = useState("");
   const [currPage, setCurrPage] = useState(1)
-  const [activities, setActivities] = useState([])
+  const [userFeed, setUserFeed] = useState([])
   const [showComments, setShowComments] = useState(false);
 const [selectedPost, setSelectedPost] = useState(null);
 
-
+  // console.log(posts);
   const limit = 5
-
-  // ✅ Fetch activities
-  const getAllActivities = async () => {
-    try {
-      const res = await getActivities({ page, limit })
-      setActivities(res.data)
-      setTotalPages(res.totalPages)
-      setCurrPage(res.currentPage)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  useEffect(() => {
-    getAllActivities()
-  }, [page])
-
+  const handleSubmitComment = async (id) => {
+    console.log(comment);
+    if (comment.trim().length == 0) return;
+    const res = await addComment(id, comment)
+    console.log(res);
+  };
+  // const getUserFeed = async () => {
+  //     const res = await getUserFeed({ page, limit })
+  //     setUserFeed(res.data)
+  //     setTotalPages(res.totalPages)
+  //     setCurrPage(res.currentPage)
+  // }
   const handleDelete = async (id) => {
     await deleteActivity(id)
-    getAllActivities() // refresh after delete
+    getUserFeed() // refresh after delete
   }
   const handleLike = async (id) => {
-    setActivities(prev =>
+    setUserFeed(prev =>
       prev.map(act => {
         if (act._id !== id) return act;
 
@@ -52,9 +51,12 @@ const [selectedPost, setSelectedPost] = useState(null);
     await likeActivity(id)
 
   }
+  useEffect(() => {
+    // getUserFeed()
+  }, [])
 	return (
 		<>
-    <CommentModal
+    {/* <CommentModal
   isOpen={showComments}
   onClose={() => setShowComments(false)}
   activityId={selectedPost?._id}
@@ -63,7 +65,7 @@ const [selectedPost, setSelectedPost] = useState(null);
   darkMode={darkMode}
   onAddComment={addComment}
   onDeleteComment={deleteComment}
-/>
+/> */}
 
 			{posts.map(post => (
                 <div key={post.id} className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -71,21 +73,21 @@ const [selectedPost, setSelectedPost] = useState(null);
                   <div className="p-4 border-b border-gray-700 flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-3">
-                        <span className="text-white font-bold">{post.user.avatar}</span>
+                        <span className="text-white font-bold">pic</span>
                       </div>
                       <div>
-                        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{post.user.name}</h3>
+                        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{post.createdBy.username}</h3>
                         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          @{post.user.username} • {post.timestamp}
+                          @{post.createdBy.username} • {post.createdAt.toString().slice(0,9)}
                         </p>
-                        <p className={`text-xs ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{post.user.role}</p>
+                        {/* <p className={`text-xs ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{post.user.role}</p> */}
                       </div>
                     </div>
                     
                     {/* Three Dots Menu */}
                     <div className="relative">
                       <button 
-                        onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
+                        onClick={() => setActiveMenu(activeMenu === post._id ? null : post._id)}
                         className={`p-2 rounded-full hover:bg-opacity-20 ${darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-200'}`}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -97,7 +99,7 @@ const [selectedPost, setSelectedPost] = useState(null);
                       {activeMenu === post.id && (
                         <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${darkMode ? 'bg-gray-700' : 'bg-white'} ring-1 ring-black ring-opacity-5 z-10`}>
                           <div className="py-1">
-                            {post.isOwnPost ? (
+                            {post.createdBy.username == "navkirat" ? (
                               <>
                                
                                 <button
@@ -118,12 +120,12 @@ const [selectedPost, setSelectedPost] = useState(null);
 
                   {/* Post Content */}
                   <div className="p-4">
-                    <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{post.content.text}</p>
+                    <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{post.description}</p>
                     
-                    {post.content.media && post.content.mediaType === 'image' && (
+                    {post.file  && (
                       <div className="rounded-lg overflow-hidden mb-4">
                         <img 
-                          src={post.content.media} 
+                          src={post.file} 
                           alt="Post media" 
                           className="w-full h-auto object-cover max-h-96"
                         />
@@ -131,20 +133,20 @@ const [selectedPost, setSelectedPost] = useState(null);
                     )}
                     
                     {/* Engagement Stats */}
-                    <div className={`flex text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>
-                      <span className="mr-4">{post.likes} likes</span>
+                    <div onClick={() => handleLike(post.id)} className={`flex text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-3`}>
+                      <span className="mr-4">{post.likes.length} likes</span>
                      <button 
                      onClick={() => {
                       setSelectedPost(post);
                       setShowComments(true);
                     }}
-                     > <span>{post.comments} comments</span></button>
+                     > <span>{post.comments.length} comments</span></button>
                     </div>
 
                     {/* Engagement Buttons */}
                     <div className="flex border-t border-b border-gray-700 py-2">
                       <button 
-                        onClick={() => handleLike(post.id)}
+                        onClick={() => handleLike(post._id)}
                         className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${post.isLiked ? 'text-blue-500' : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -161,7 +163,7 @@ const [selectedPost, setSelectedPost] = useState(null);
                       </button>
                       
                       <button 
-                        onClick={() => handleBookmark(post.id)}
+                        onClick={() => handleBookmark(post._id)}
                         className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${post.isBookmarked ? 'text-blue-500' : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -173,17 +175,42 @@ const [selectedPost, setSelectedPost] = useState(null);
 
                     {/* Comment Input */}
                     <div className="pt-4 flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-3 flex-shrink-0">
-                        <span className="text-white font-bold text-sm">AJ</span>
-                      </div>
-                      <div className={`flex-1 rounded-full px-4 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <input 
-                          type="text" 
-                          placeholder="Write a comment..." 
-                          className={`w-full bg-transparent outline-none ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}
-                        />
-                      </div>
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-3 flex-shrink-0">
+                      <span className="text-white font-bold text-sm">AJ</span>
                     </div>
+
+                    {/* Input */}
+                    <div
+                      className={`flex-1 flex items-center rounded-full px-4 py-2 ${
+                        darkMode ? "bg-gray-700" : "bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="text"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Write a comment..."
+                        className={`flex-1 bg-transparent outline-none ${
+                          darkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                       
+                      />
+
+                      {/* Arrow Button */}
+                      <button
+                        onClick={() => handleSubmitComment(post._id)}
+                        disabled={!comment.trim()}
+                        className={`ml-3 p-2 rounded-full transition ${
+                          comment.trim()
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "bg-gray-400 cursor-not-allowed text-white"
+                        }`}
+                      >
+                        <IoSend size={18} />
+                      </button>
+                    </div>
+                  </div>
                   </div>
                 </div>
               ))}

@@ -1,72 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import ActivityCard from "../../components/ActivityCard";
+import { getActivities, getUserFeed } from "../../services/activityApis";
 
 const FeedPage = () => {
   const [darkMode, setDarkMode] = useState(true);
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      user: {
-        name: "Alex Johnson",
-        username: "alexj",
-        avatar: "AJ",
-        role: "Senior Frontend Developer"
-      },
-      content: {
-        text: "Just launched my new portfolio website! Built with React and Tailwind CSS. The performance improvements with code splitting are incredible!",
-        media: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-        mediaType: "image"
-      },
-      timestamp: "2 hours ago",
-      likes: 42,
-      comments: 7,
-      isLiked: false,
-      isBookmarked: false,
-      isOwnPost: true
-    },
-    {
-      id: 2,
-      user: {
-        name: "Sarah Williams",
-        username: "sarahw",
-        avatar: "SW",
-        role: "Full Stack Developer"
-      },
-      content: {
-        text: "Just released a new tutorial on advanced React patterns. Check it out on my YouTube channel! This covers the latest best practices for state management.",
-        media: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-        mediaType: "image"
-      },
-      timestamp: "5 hours ago",
-      likes: 128,
-      comments: 23,
-      isLiked: true,
-      isBookmarked: false,
-      isOwnPost: false
-    },
-    {
-      id: 3,
-      user: {
-        name: "Mike Chen",
-        username: "mikec",
-        avatar: "MC",
-        role: "UI/UX Designer"
-      },
-      content: {
-        text: "Working on a new open source project - a component library for React developers. Stay tuned for the release! Would love to get some early feedback from the community.",
-        media: null,
-        mediaType: null
-      },
-      timestamp: "Yesterday",
-      likes: 56,
-      comments: 12,
-      isLiked: false,
-      isBookmarked: true,
-      isOwnPost: false
-    }
-  ]);
-
+  const [posts, setPosts] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [newPost, setNewPost] = useState("");
   const [showNewPostModal, setShowNewPostModal] = useState(false);
@@ -76,7 +15,6 @@ const FeedPage = () => {
     { id: 3, name: "Lisa Wang", username: "lisaw", avatar: "LW", mutual: 15 }
   ]);
   const [showRequests, setShowRequests] = useState(false);
-
   const handleLike = (postId) => {
     setPosts(posts.map(post => {
       if (post.id === postId) {
@@ -164,7 +102,16 @@ const FeedPage = () => {
     { name: "Sophie Brown", username: "sophieb", avatar: "SB", mutual: 9 },
     { name: "Chris Lee", username: "chrisl", avatar: "CL", mutual: 3 }
   ];
-
+  useEffect(() => {
+    const fetchActivities = async () => {
+      const res = await getActivities();
+      console.log(res);
+      setPosts(res.data)
+    };
+  
+    fetchActivities();
+  }, []);
+  if (!posts) return <div>loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -202,7 +149,7 @@ const FeedPage = () => {
 
             {/* Posts Feed */}
             <div className="space-y-6">
-                <ActivityCard posts={posts} activeMenu={activeMenu} darkMode={darkMode} />
+                <ActivityCard posts={posts}  darkMode={darkMode} />
             </div>
           </div>
 

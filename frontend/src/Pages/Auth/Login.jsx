@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { loginUser } from "../../services/authApis";
 
 const Login = () => {
   const [darkMode, setDarkMode] = useState(true);
@@ -19,24 +20,14 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Form Data:", formData);
-      setIsSubmitting(false);
-      // In a real app, you would handle login success/error here
-      alert(`Welcome back! Logging in with ${formData.email}`);
-    }, 1500);
+    const res = await loginUser(formData)
+    console.log(res);
+    setIsSubmitting(true)
   };
 
-  const handleSocialLogin = (provider) => {
-    console.log(`Logging in with ${provider}`);
-    // In a real app, you would implement social login here
-    alert(`Redirecting to ${provider} login...`);
-  };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gradient-to-br from-gray-900 to-blue-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'} flex items-center justify-center p-4`}>

@@ -49,9 +49,9 @@ export const getActivities = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const activities = await Activity.find(query)
-      .populate('createdBy', 'name username avatar role')
-      .populate('comments.createdBy', 'name username avatar')
-      .populate('likes', 'name username avatar')
+      .populate('createdBy', 'name username  role')
+      .populate('comments.createdBy', 'name username ')
+      .populate('likes', 'name username ')
       .skip(skip)
       .limit(Number(limit));
 
@@ -121,17 +121,17 @@ export const deleteActivity = async (req, res) => {
 export const likeActivity = async (req, res) => {
   try {
     const activity = await Activity.findById(req.params.id);
-
+    const userId = req.user.userID || req.user._id;
     if (!activity) {
       return res.status(404).json({ success: false, message: 'Activity not found' });
     }
 
-    const index = activity.likes.indexOf(req.user._id);
+    const index = activity.likes.indexOf(userId);
 
     if (index > -1) {
       activity.likes.splice(index, 1);
     } else {
-      activity.likes.push(req.user._id);
+      activity.likes.push(userId);
     }
 
     await activity.save();
@@ -185,7 +185,7 @@ export const addComment = async (req, res) => {
 export const deleteComment = async (req, res) => {
   try {
     const activity = await Activity.findById(req.params.id);
-
+    const userId = req.user.userID || req.user._id;
     if (!activity) {
       return res.status(404).json({ success: false, message: 'Activity not found' });
     }
@@ -200,10 +200,10 @@ export const deleteComment = async (req, res) => {
 
     const comment = activity.comments[commentIndex];
 
-    const isCommentOwner = comment.createdBy.toString() === req.user._id.toString();
-    const isActivityOwner = activity.createdBy.toString() === req.user._id.toString();
+    const isCommentOwner = comment.createdBy.toString() === userId.toString();
+    const isActivityOwner = activity.createdBy.toString() === userId.toString();
 
-    if (!isCommentOwner && !isActivityOwner && req.user.role !== 'Admin') {
+    if (!isCommentOwner && !isActivityOwner ) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
@@ -212,6 +212,7 @@ export const deleteComment = async (req, res) => {
 
     res.json({ success: true, message: 'Comment deleted successfully' });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

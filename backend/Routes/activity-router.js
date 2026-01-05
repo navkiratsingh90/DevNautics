@@ -18,7 +18,7 @@ import authMiddleware from '../middlewares/auth-middleware.js';
 const router = express.Router();
 
 // Public routes
-router.get('/', getActivities);
+router.get('/get-activities', getActivities);
 router.get('/trending', getTrendingActivities);
 // router.get('/tag/:tag', getActivitiesByTag);
 router.get('/:id', getActivityById);
@@ -27,9 +27,9 @@ router.get('/:id', getActivityById);
 router.post('/create', authMiddleware , singleUpload, createActivity);
 // router.put('/:id', singleUpload, updateActivity);
 router.delete('/:id', deleteActivity);
-router.post('/:id/like', likeActivity);
+router.post('/:id/like',authMiddleware , likeActivity);
 router.post('/:id/comments',authMiddleware, addComment);
-router.delete('/:id/comments/:commentId', deleteComment);
+router.delete('/:id/comments/:commentId',authMiddleware, deleteComment);
 router.get('/feed/my', getUserFeed);
 
 export default router;
