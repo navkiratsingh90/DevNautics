@@ -4,56 +4,17 @@ import { handleTheme } from "../Features/ThemeSlice";
 
 const EducationPage = () => {
   const darkMode = useSelector(state => state.Theme.darkMode)
+  const user = useSelector(state => state.Auth.user)
   const dispatch = useDispatch()
   const [showForm, setShowForm] = useState(false);
-  const [education, setEducation] = useState([
-    {
-      id: 1,
-      institution: "Stanford University",
-      degree: "Master of Science in Computer Science",
-      duration: "2018 - 2020",
-      grade: "3.9/4.0 GPA",
-      achievements: [
-        "Specialized in Artificial Intelligence and Machine Learning",
-        "Published research paper on Neural Networks",
-        "Teaching Assistant for Algorithms course"
-      ],
-      logo: "🎓"
-    },
-    {
-      id: 2,
-      institution: "University of California, Berkeley",
-      degree: "Bachelor of Science in Software Engineering",
-      duration: "2014 - 2018",
-      grade: "3.8/4.0 GPA",
-      achievements: [
-        "Dean's List for 6 consecutive semesters",
-        "President of Computer Science Society",
-        "Winner of Annual Hackathon 2017"
-      ],
-      logo: "🏫"
-    },
-    {
-      id: 3,
-      institution: "San Francisco High School",
-      degree: "High School Diploma",
-      duration: "2010 - 2014",
-      grade: "94%",
-      achievements: [
-        "Valedictorian",
-        "National Math Olympiad Winner",
-        "Captain of Robotics Team"
-      ],
-      logo: "📚"
-    }
-  ]);
+  // const [education,setEducation] = useState(user.education)
+
 
   const [formData, setFormData] = useState({
-    institution: "",
+    schoolName: "",
     degree: "",
     duration: "",
-    grade: "",
-    achievements: ""
+    description: ""
   });
 
   const handleInputChange = (e) => {
@@ -67,22 +28,19 @@ const EducationPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const newEducation = {
-      id: education.length + 1,
-      institution: formData.institution,
+      id: user.education.length + 1,
+      institution: formData.schoolName,
       degree: formData.degree,
       duration: formData.duration,
-      grade: formData.grade,
-      achievements: formData.achievements.split(',').map(a => a.trim()),
-      logo: "🎓"
+      description: formData.description,
     };
     
     setEducation([newEducation, ...education]);
     setFormData({
-      institution: "",
+      schoolName: "",
       degree: "",
       duration: "",
-      grade: "",
-      achievements: ""
+      description: ""
     });
     setShowForm(false);
   };
@@ -121,12 +79,12 @@ const EducationPage = () => {
           <div className={`absolute left-4 top-0 h-full w-1 ${darkMode ? 'bg-blue-700' : 'bg-blue-300'} -z-10`}></div>
           
           {/* Education Items */}
-          {education.map((edu, index) => (
+          {[].map((edu, index) => (
             <div key={edu.id} className="flex mb-12">
               {/* Timeline indicator */}
               <div className="flex-shrink-0 mr-6">
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full ${darkMode ? 'bg-blue-700' : 'bg-blue-600'} text-white font-bold text-lg`}>
-                  {edu.logo}
+                  m
                 </div>
               </div>
               
@@ -135,42 +93,19 @@ const EducationPage = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{edu.institution}</h2>
+                      <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{edu.schoolName}</h2>
                       <p className={`text-lg mt-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{edu.degree}</p>
                     </div>
                     <div className={`text-right ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <p className="font-medium">{edu.duration}</p>
-                      <p className="text-sm">{edu.grade}</p>
+                      <p className="text-sm">{edu.description}</p>
                     </div>
                   </div>
-                  
-                  {/* Achievements */}
-                  {edu.achievements && edu.achievements.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Achievements</h3>
-                      <ul className={`space-y-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {edu.achievements.map((achievement, idx) => (
-                          <li key={idx} className="flex items-start">
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 flex-shrink-0 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            {achievement}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
-                
-                {/* Footer with degree type indicator */}
-               
               </div>
             </div>
           ))}
         </div>
-
-        {/* Skills Section */}
-        
       </div>
       <div className="mb-12 flex justify-center">
           <div 
@@ -209,8 +144,8 @@ const EducationPage = () => {
                 </label>
                 <input
                   type="text"
-                  name="institution"
-                  value={formData.institution}
+                  name="schoolName"
+                  value={formData.schoolName}
                   onChange={handleInputChange}
                   className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
                   required
@@ -247,25 +182,11 @@ const EducationPage = () => {
               
               <div>
                 <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  CGPA/Percentage
-                </label>
-                <input
-                  type="text"
-                  name="grade"
-                  value={formData.grade}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Achievements (separated by commas)
+                  Description
                 </label>
                 <textarea
-                  name="achievements"
-                  value={formData.achievements}
+                  name="description"
+                  value={formData.description}
                   onChange={handleInputChange}
                   rows="3"
                   className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}

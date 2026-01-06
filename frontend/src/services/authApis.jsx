@@ -34,6 +34,16 @@ export const verifyUser = async (data) => {
     throw err;
   }
 };
+export const getUser = async () => {
+  try {
+    const res = await API.get("/auth/get-user");
+    toast.success(res.data.msg);
+    return res;
+  } catch (err) {
+    toast.error(err.response?.data?.msg || "Verification failed");
+    throw err;
+  }
+};
 
 export const loginUser = async (data) => {
   try {

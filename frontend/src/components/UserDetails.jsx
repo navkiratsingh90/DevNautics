@@ -8,6 +8,8 @@ import { handleTheme } from "../Features/ThemeSlice";
 const UserProfile = () => {
   const [isConnected, setIsConnected] = useState(false);
   // const [darkMode, setDarkMode] = useState(false);
+  const user = useSelector((state) => state.Auth.user)
+  const userId = useSelector((state) => state.Auth.userId)
   const [isOpen,setIsOpen] = useState(false)
   const darkMode = useSelector((state) => state.Theme.darkMode)
   const dispatch = useDispatch()
@@ -109,7 +111,7 @@ const UserProfile = () => {
                   darkMode ? "text-white" : "text-gray-800"
                 }`}
               >
-                Alex Johnson
+                {user.username}
               </h2>
               <p className="text-blue-600 text-base sm:text-lg">
                 Senior Frontend Developer
@@ -120,7 +122,7 @@ const UserProfile = () => {
             <div className="flex justify-center mb-8">
               <button
                 className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full transition-all duration-300 font-medium text-sm sm:text-base ${
-                  isConnected
+                  user._id == userId || user.connnectedUsers.contains(userId)
                     ? `${
                         darkMode
                           ? "bg-green-900 text-green-200"
@@ -130,7 +132,7 @@ const UserProfile = () => {
                 }`}
                 onClick={() => setIsConnected(!isConnected)}
               >
-                {isConnected ? "Connected" : "Connect +"}
+                {user._id == userId || user.connnectedUsers.contains(userId) ? "Connected" : "Connect +"}
               </button>
             </div>
 
@@ -160,11 +162,11 @@ const UserProfile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
+            <div className="grid  grid-cols-3 gap-2 sm:gap-4 mb-8">
               {[
-                { value: "428", label: "Connections" },
-                { value: "1.2K", label: "Profile Views" },
-                { value: "47", label: "Posts" },
+                { value: user.connectedUsers.length, label: "Connections" },
+                { value: user.activityPosted.length, label: "Posts" },
+                { value: user.activeProjects.length, label: "Projects" }
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -233,8 +235,7 @@ const UserProfile = () => {
                     darkMode ? "text-gray-400" : "text-gray-600"
                   }`}
                 >
-                  Passionate frontend developer with 5+ years of experience
-                  creating responsive and accessible web applications.
+                  {user.about}
                 </p>
               </div>
             </div>
@@ -253,7 +254,7 @@ const UserProfile = () => {
             Contact Information
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {["Email", "Phone", "Location", "Social Profiles"].map(
+            {[user.email, "Phone", "Location", "Social Profiles"].map(
               (info, i) => (
                 <div
                   key={i}

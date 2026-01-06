@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import UserDashboard from "./Pages/Dashboard/UserDashboard";
@@ -6,7 +6,7 @@ import UserProfile from "./components/UserDetails";
 import WorkExperience from "./components/WorkEx";
 import EducationPage from "./components/Education";
 import SocialFeed from "./components/SocialActivity";
-import {Provider} from 'react-redux'
+import {Provider, useDispatch} from 'react-redux'
 import { store } from "./Store/Store";
 import ProjectsPage from "./components/Projects";
 import SkillsPage from "./components/Skills";
@@ -34,6 +34,8 @@ import Workspaces from "./Pages/Projects/Projects";
 import SignupPage from "./Pages/Auth/Signup.jsx";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { getUser } from "./services/authApis.jsx";
+import { handleCredentials } from "./Features/AuthSlice.jsx";
 
 const router = createBrowserRouter([
   {
@@ -113,42 +115,44 @@ const router = createBrowserRouter([
     ]
   },
   {
-    path : '/user',
+    path : '/user/:id',
     element : <UserDashboard/>,
     children : [
       {
-        path : '/user',
+        path : '/user/:id',
         element : <UserProfile/>
       },
       {
-        path : '/user/work-experience',
+        path : '/user/:id/work-experience',
         element : <WorkExperience/>
       },
       {
-        path : '/user/education',
+        path : '/user/:id/education',
         element : <EducationPage/>
       },
       {
-        path : '/user/activity',
+        path : '/user/:id/activity',
         element : <SocialFeed/>
       },
       {
-        path : '/user/projects',
+        path : '/user/:id/projects',
         element : <ProjectsPage/>
       },
       {
-        path : '/user/skills',
+        path : '/user/:id/skills',
         element : <SkillsPage/>
       },
       {
-        path : '/user/certifications',
+        path : '/user/:id/certifications',
         element : <CertificationsPage/>
       }
     ]
   }
 ])
 
+    
 function App() {
+  
   return (
     <>
      <ToastContainer

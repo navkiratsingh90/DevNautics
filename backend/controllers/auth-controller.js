@@ -67,6 +67,21 @@ export const verifyUser = async (req, res) => {
   }
 };
 
+export const getUser = async (req,res) => {
+  try {
+    const userId = req.user.userID || req.user._id;
+    const user = await User.findById(userId);
+    if (!user) res.status(400).json({
+      msg : "not authprised"
+    })
+    res.status(200).json({
+      msg : "approved",
+      user
+    })
+  } catch (error) {
+      console.error(error);
+  }
+}
 // ---------- LOGIN ----------
 export const loginUser = async (req, res) => {
   try {

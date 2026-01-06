@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const WorkExperience = () => {
   const darkMode = useSelector((state) => state.Theme.darkMode);
+  const user = useSelector((state) => state.Auth.user);
   const dispatch = useDispatch();
   const [showForm, setShowForm] = useState(false);
 
@@ -107,7 +108,7 @@ const WorkExperience = () => {
           <div
             className={`absolute left-4 sm:left-6 top-0 h-full w-1 ${darkMode ? "bg-blue-700" : "bg-blue-300"} -z-10`}
           />
-          {experiences.map((exp, index) => (
+          {user.workExperience.map((exp, index) => (
             <div key={exp.id} className=" flex flex-col sm:flex-row mb-12 sm:ml-4 gap-4">
               {/* Timeline indicator */}
               <div className="flex-shrink-0 flex items-center justify-center sm:mr-6">
@@ -116,7 +117,7 @@ const WorkExperience = () => {
                     darkMode ? "bg-blue-700" : "bg-blue-600"
                   } text-white text-lg`}
                 >
-                  {exp.logo}
+                  w
                 </div>
               </div>
 
@@ -136,24 +137,6 @@ const WorkExperience = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm sm:text-base mt-2">{exp.description}</p>
-                  {exp.certifications?.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="font-semibold mb-2">Certifications</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {exp.certifications.map((cert, idx) => (
-                          <span
-                            key={idx}
-                            className={`px-3 py-1 rounded-full text-xs sm:text-sm ${
-                              darkMode ? "bg-blue-900 text-blue-200" : "bg-blue-100 text-blue-800"
-                            }`}
-                          >
-                            {cert.name} ({cert.issuer})
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
                 </CardContent>
               </Card>
             </div>

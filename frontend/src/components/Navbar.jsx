@@ -39,6 +39,8 @@ import { handleTheme } from "../Features/ThemeSlice";
 
 const Navbar5 = () => {
   const darkMode = useSelector((state) => state.Theme.darkMode)
+  const userId = useSelector((state) => state.Auth.userId)
+
   const dispatch = useDispatch()
   const [isloggedIn,seIsLoggedIn] = useState(false)
   const features = [
@@ -117,7 +119,7 @@ const Navbar5 = () => {
 
           {/* RIGHT SIDE (Auth / Avatar) */}
           <div className="hidden items-center gap-4 lg:flex">
-            {isloggedIn ? (
+            {userId ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer">
@@ -132,7 +134,7 @@ const Navbar5 = () => {
                   <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    <Link to="/user">Profile</Link>
+                    <Link to={`/user/${userId}`}>Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <p>{darkMode ? 'dark-Mode' : 'light-Mode'}</p>

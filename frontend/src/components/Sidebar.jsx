@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 const Sidebar = () => {
   const [activeSection, setActiveSection] = useState("user");
   const darkMode = useSelector(state => state.Theme.darkMode)
+  const userId = useSelector(state => state.Auth.userId)
   const [isOpen, setIsOpen] = useState(false);
 
   const sections = [
@@ -52,7 +53,7 @@ const Sidebar = () => {
         {/* Navigation Sections */}
         <div className="flex-1 overflow-y-auto py-4">
           {sections.map((section) => (
-            <Link to={`/user/${section.to}`} key={section.id} className="mb-1" >
+            <Link to={`/user/${userId}/${section.to}`} key={section.id} className="mb-1" >
               <button
                 onClick={() => {
                   setActiveSection(section.id);

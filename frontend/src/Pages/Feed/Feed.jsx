@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import ActivityCard from "../../components/ActivityCard";
 import { getActivities, getUserFeed } from "../../services/activityApis";
+import { toast } from "react-toastify";
 
 const FeedPage = () => {
   const [darkMode, setDarkMode] = useState(true);
@@ -105,6 +106,7 @@ const FeedPage = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       const res = await getActivities();
+      toast.success("successful")
       console.log(res);
       setPosts(res.data)
     };
@@ -155,24 +157,6 @@ const FeedPage = () => {
 
           {/* Sidebar - Right Column */}
           <div className="lg:w-1/3 space-y-6">
-           
-            
-
-            {/* Trending Topics */}
-            <div className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="p-4 border-b border-gray-700">
-                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Trending Topics</h2>
-              </div>
-              
-              <div className="p-4 space-y-3">
-                {trendingTopics.map((topic, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>#{topic.name}</span>
-                    <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>{topic.posts} posts</span>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Suggested Users */}
             <div className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>

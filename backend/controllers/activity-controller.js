@@ -14,8 +14,9 @@ export const createActivity = async (req, res) => {
     }
 
     if (req.file) {
-      const fileUri = getDataUri(file);
-       fileUrl = await cloudinary.uploader.upload(fileUri.content);
+      const fileUri = getDataUri(req.file);
+      const uploadRes = await cloudinary.uploader.upload(fileUri.content);
+      fileUrl = uploadRes.secure_url;
     }
 
     const tagsArray = Array.isArray(tags)

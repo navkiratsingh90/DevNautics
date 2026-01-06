@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-	adsPosted: [],
-	wishlist: [],
-	user : undefined,
+	
+	userId : undefined,
+	user : null,
 	isLoggedin : localStorage.getItem('isLoggedin'),
 	email: '',
 	isLoading: false,
@@ -46,16 +46,13 @@ const AuthSlice = createSlice({
 			//  console.log(JSON.parse(JSON.stringify(state.adsPosed)));
 		},
 		handleCredentials: (state, action) => {
+			// console.log("done");
 			const data = action.payload;
-			state.user = data;
-		
-			if (data) {
-				localStorage.setItem("isLoggedin", "true");
-				state.isLoggedin = true;
-			} else {
-				localStorage.removeItem("isLoggedin");
-				state.isLoggedin = false;
-			}
+
+			console.log(data);
+			state.user = data
+			state.userId = data._id
+			// console.log(JSON.parse(JSON.stringify(state.userId)));
 		}
 ,		
 		handleEmail: (state,action) => {

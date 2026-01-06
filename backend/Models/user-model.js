@@ -9,11 +9,15 @@ const educationSchema = new mongoose.Schema({
 			type: String, 
 			required: true 
 		},
+		degree : {
+			type : String,
+			required : true,
+		},
     duration: { 
 			type: String, 
 			required: true 
 		},
-    information: { 
+    description: { 
 			type: String 
 		},
 });
@@ -33,6 +37,9 @@ const workExperienceSchema = new mongoose.Schema({
     description: { 
 			type: String 
 		},
+		location : {
+			type : String
+		}
 });
 
 const skillsSchema = new mongoose.Schema({
@@ -82,7 +89,10 @@ const userSchema = new mongoose.Schema(
 
 	education: [educationSchema],
 	workExperience: [workExperienceSchema],
-	skills: skillsSchema,
+	skills: {
+		type : [skillsSchema],
+		default : []
+	},
 
 	activityPosted: [
 		{

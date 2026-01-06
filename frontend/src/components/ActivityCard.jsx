@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { addComment, deleteActivity, getActivities, getUserFeed, likeActivity } from '../services/activityApis'
 import CommentModal from './CommentModal'
 import { IoSend } from "react-icons/io5"; // arrow icon
+import { useSelector } from 'react-redux';
 
 
 const ActivityCard = ({posts,darkMode}) => {
@@ -13,8 +14,9 @@ const ActivityCard = ({posts,darkMode}) => {
   const [userFeed, setUserFeed] = useState([])
   const [showComments, setShowComments] = useState(false);
 const [selectedPost, setSelectedPost] = useState(null);
+  const userId = useSelector((state) => state.Auth.userId)
 
-  // console.log(posts);
+  console.log("posts = ", posts);
   const limit = 5
   const handleSubmitComment = async (id) => {
     console.log(comment);
@@ -28,9 +30,13 @@ const [selectedPost, setSelectedPost] = useState(null);
   //     setTotalPages(res.totalPages)
   //     setCurrPage(res.currentPage)
   // }
+  const showCommentBox = (post) => {
+    setSelectedPost(post)
+    setShowComments(true);
+  }
   const handleDelete = async (id) => {
-    await deleteActivity(id)
-    getUserFeed() // refresh after delete
+    // await deleteActivity(id)
+    // getUserFeed() // refresh after delete
   }
   const handleLike = async (id) => {
     setUserFeed(prev =>
@@ -48,7 +54,7 @@ const [selectedPost, setSelectedPost] = useState(null);
         };
       })
     );
-    await likeActivity(id)
+    // await likeActivity(id)
 
   }
   useEffect(() => {
@@ -56,7 +62,7 @@ const [selectedPost, setSelectedPost] = useState(null);
   }, [])
 	return (
 		<>
-    {/* <CommentModal
+    <CommentModal
   isOpen={showComments}
   onClose={() => setShowComments(false)}
   activityId={selectedPost?._id}
@@ -64,8 +70,8 @@ const [selectedPost, setSelectedPost] = useState(null);
   currentUserId={userId}
   darkMode={darkMode}
   onAddComment={addComment}
-  onDeleteComment={deleteComment}
-/> */}
+  onDeleteComment={handleDelete()}
+/>
 
 			{posts.map(post => (
                 <div key={post.id} className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -99,11 +105,11 @@ const [selectedPost, setSelectedPost] = useState(null);
                       {activeMenu === post.id && (
                         <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${darkMode ? 'bg-gray-700' : 'bg-white'} ring-1 ring-black ring-opacity-5 z-10`}>
                           <div className="py-1">
-                            {post.createdBy.username == "navkirat" ? (
+                            {post.createdBy._id == userId ? (
                               <>
                                
                                 <button
-                                  onClick={() => handleDelete(post.id)}
+                                  onClick={() => handleDelete(post._id)}
                                   className={`block w-full text-left px-4 py-2 text-sm ${darkMode ? 'text-red-400 hover:bg-gray-600' : 'text-red-600 hover:bg-gray-100'}`}
                                 >
                                   Delete Post
@@ -155,7 +161,9 @@ const [selectedPost, setSelectedPost] = useState(null);
                         Like
                       </button>
                       
-                      <button className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}>
+                      <button
+                      onClick={() => showCommentBox(post)}
+                       className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
                         </svg>
