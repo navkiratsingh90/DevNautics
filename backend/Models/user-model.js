@@ -1,140 +1,66 @@
 import mongoose from "mongoose";
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-
-const SALT_ROUNDS = 10
 
 const educationSchema = new mongoose.Schema({
-    schoolName: { 
-			type: String, 
-			required: true 
-		},
-		degree : {
-			type : String,
-			required : true,
-		},
-    duration: { 
-			type: String, 
-			required: true 
-		},
-    description: { 
-			type: String 
-		},
+  schoolName: { type: String, required: true },
+  degree: { type: String, required: true },
+  duration: { type: String, required: true },
+  description: { type: String }
 });
+const projectSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String },
+  file : {type : String},
+  techStack: [String],
+  role: { type: String }, // Frontend / Backend / Full Stack
+  duration: { type: String },
+  githubLink: { type: String },
+  liveLink: { type: String },
+});
+
 
 const workExperienceSchema = new mongoose.Schema({
-    companyName: { 
-			type: String, 
-			required: true 
-		},
-    duration: { 
-			type: String, 
-			required: true 
-		},
-    role: { 
-			type: String 
-		},
-    description: { 
-			type: String 
-		},
-		location : {
-			type : String
-		}
-});
-
-const skillsSchema = new mongoose.Schema({
-    frontend: [{ 
-			type: String 
-		}],
-    backend: [{ 
-			type: String 
-		}],
-    tools: [{ 
-			type: String 
-		}],
-    frameworks: [{ 
-			type: String 
-		}],
-    libraries: [{ 
-			type: String 
-		}],
-    languages: [{ 
-			type: String 
-		}],
+  companyName: { type: String, required: true },
+  duration: { type: String, required: true },
+  role: { type: String },
+  description: { type: String },
+  location: { type: String }
 });
 
 const userSchema = new mongoose.Schema(
-{
-	username: { 
-		type: String, 
-		required: true, 
-		trim: true 
-	},
-	password : {
-		type : String,
-		required : true
-	},
-	about: { 
-		type: String, 
-		default: "" 
-	},
-	email: { 
-		type: String, 
-		required: true, 
-		unique: true 
-	},
+  {
+    username: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
 
-	verificationCode: { type: String },
-	verificationExpiry: { type: Date },
+    about: { type: String, default: "" },
 
-	education: [educationSchema],
-	workExperience: [workExperienceSchema],
-	skills: {
-		type : [skillsSchema],
-		default : []
-	},
+    verificationCode: String,
+    verificationExpiry: Date,
 
-	activityPosted: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Activity",
-		},
-	],
-	projectCollaborations: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "projectCollab",
-		},
-	],
-	activeProjects : [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "projectFlow",
-		},
-	],
+    education: [educationSchema],
+    workExperience: [workExperienceSchema],
 
-	totalPendingRequests: [
-		{ type: mongoose.Schema.Types.ObjectId, 
-			ref: "User" },
-	],
-	challengesAttended : [
-		{
-			type : mongoose.Schema.Types.ObjectId ,
-			ref : "Challenge"
-		}
-	],
-	totalPoints : {
-		type : Number,
-		default : 0,
-	},
-	connectedUsers: [
-		{ 
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "User" 
-		}
-	],
-},
-{ timestamps: true }
+    skills: {
+      frontend: [String],
+      backend: [String],
+      tools: [String],
+      frameworks: [String],
+      libraries: [String],
+      languages: [String],
+    },
+    projects: [projectSchema],
+
+    activityPosted: [{ type: mongoose.Schema.Types.ObjectId, ref: "Activity" }],
+    projectCollaborations: [{ type: mongoose.Schema.Types.ObjectId, ref: "projectCollab" }],
+    activeProjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "projectFlow" }],
+
+    totalPendingRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    connectedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
+    challengesAttended: [{ type: mongoose.Schema.Types.ObjectId, ref: "Challenge" }],
+    totalPoints: { type: Number, default: 0 },
+  },
+  { timestamps: true }
 );
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) {

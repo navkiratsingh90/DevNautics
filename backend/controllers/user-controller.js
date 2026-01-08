@@ -1,37 +1,43 @@
 import User from '../models/user-model.js'
-import Activity from "../models/Activity.js";
-import Challenge from "../models/Challenge.js";
-import ProjectFlow from "../models/ProjectFlow.js";
-import Discussion from "../models/Discussion.js"
+import Activity from "../models/activity-model.js";
+import Challenge from "../models/challenge-model.js";
+import cloudinary from '../utils/cloudinary.js'
+import getDataUri from '../utils/datauri.js';
+import ProjectFlow from "../models/workspace-model.js";
+import Discussion from "../models/discussion-model.js"
 // ===================== PROFILE =====================
 
 export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user;
-    const user = await User.findById(userId)
+    const user = await User.findById(req.user)
       .populate("activeProjects")
-      .populate("connectedUsers")
+      .populate("connectedUsers", "username email")
       .populate("challengesAttended");
 
     if (!user) return res.status(404).json({ msg: "User not found" });
+
     res.status(200).json({ user });
   } catch (error) {
-    res.status(500).json({ msg: "Error fetching user" });
+    console.error("getUserProfile:", error);
+    res.status(500).json({ msg: "Failed to fetch profile" });
   }
 };
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user;
-    const { about } = req.body;
+    const userId = req.user.userID || req.user._id;
     const user = await User.findByIdAndUpdate(
       userId,
-      { about },
+      { about: req.body.about },
       { new: true }
     );
+
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
     res.status(200).json({ msg: "Profile updated", user });
   } catch (error) {
-    res.status(500).json({ msg: "Error updating profile" });
+    console.error("updateUserProfile:", error);
+    res.status(500).json({ msg: "Failed to update profile" });
   }
 };
 
@@ -39,31 +45,35 @@ export const updateUserProfile = async (req, res) => {
 
 export const addEducation = async (req, res) => {
   try {
-    const userId = req.user;
-    const { schoolName, duration, information } = req.body;
-
+    const { schoolName, degree, duration, description } = req.body;
+    const userId = req.user.userID || req.user._id;
     const user = await User.findById(userId);
-    user.education.push({ schoolName, duration, information });
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    user.education.push({ schoolName, degree, duration, description });
     await user.save();
 
-    res.status(200).json({ msg: "Education added", user });
+    res.status(200).json({ msg: "Education added", education: user.education });
   } catch (error) {
-    res.status(500).json({ msg: "Error adding education" });
+    console.error("addEducation:", error);
+    res.status(500).json({ msg: "Failed to add education" });
   }
 };
 
 export const deleteEducation = async (req, res) => {
   try {
-    const userId = req.user;
-    const { eduId } = req.params;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: "User not found" });
 
-    const user = await User.findById(userId);
-    user.education = user.education.filter((edu) => edu._id.toString() !== eduId);
+    user.education = user.education.filter(
+      edu => edu._id.toString() !== req.params.eduId
+    );
+
     await user.save();
-
-    res.status(200).json({ msg: "Education deleted", user });
+    res.status(200).json({ msg: "Education removed" });
   } catch (error) {
-    res.status(500).json({ msg: "Error deleting education" });
+    console.error("deleteEducation:", error);
+    res.status(500).json({ msg: "Failed to delete education" });
   }
 };
 
@@ -71,225 +81,296 @@ export const deleteEducation = async (req, res) => {
 
 export const addWorkExperience = async (req, res) => {
   try {
-    const userId = req.user;
-    const { companyName, duration, role, description } = req.body;
-
+    const { companyName, duration, role, description, location } = req.body;
+    const userId = req.user.userID || req.user._id;
     const user = await User.findById(userId);
-    user.workExperience.push({ companyName, duration, role, description });
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    user.workExperience.push({ companyName, duration, role, description, location });
     await user.save();
 
-    res.status(200).json({ msg: "Work experience added", user });
+    res.status(200).json({ msg: "Work experience added" });
   } catch (error) {
-    res.status(500).json({ msg: "Error adding work experience" });
+    console.error("addWorkExperience:", error);
+    res.status(500).json({ msg: "Failed to add work experience" });
   }
 };
 
 export const deleteWorkExperience = async (req, res) => {
   try {
-    const userId = req.user;
-    const { workId } = req.params;
+    const user = await User.findById(req.user);
+    if (!user) return res.status(404).json({ msg: "User not found" });
 
-    const user = await User.findById(userId);
     user.workExperience = user.workExperience.filter(
-      (w) => w._id.toString() !== workId
+      w => w._id.toString() !== req.params.workId
     );
+
+    await user.save();
+    res.status(200).json({ msg: "Work experience removed" });
+  } catch (error) {
+    console.error("deleteWorkExperience:", error);
+    res.status(500).json({ msg: "Failed to delete work experience" });
+  }
+};
+
+export const addProject = async (req, res) => {
+  try {
+    const userId = req.user.userID || req.user._id;
+
+    const {
+      title,
+      description,
+      techStack,
+      role,
+      duration,
+      githubLink,
+      liveLink,
+    } = req.body;
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: "Project title is required",
+      });
+    }
+    let file;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    if (req.file) {
+       const fileUri = getDataUri(req.file);
+      const uploadRes = await cloudinary.uploader.upload(fileUri.content);
+      file = uploadRes.secure_url;
+    }
+    user.projects.push({
+      title,
+      description,
+      file,
+      techStack,
+      role,
+      duration,
+      githubLink,
+      liveLink,
+    });
+
     await user.save();
 
-    res.status(200).json({ msg: "Work experience deleted", user });
+    return res.status(200).json({
+      success: true,
+      message: "Project added successfully 🚀",
+      projects: user.projects,
+    });
+
   } catch (error) {
-    res.status(500).json({ msg: "Error deleting work experience" });
+    console.error("addProject:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to add project",
+    });
   }
 };
 
 // ===================== SKILLS =====================
 
+// export const updateSkills = async (req, res) => {
+//   try {
+//     const user = await User.findByIdAndUpdate(
+//       req.user,
+//       { skills: req.body },
+//       { new: true }
+//     );
+
+//     if (!user) return res.status(404).json({ msg: "User not found" });
+
+//     res.status(200).json({ msg: "Skills updated", skills: user.skills });
+//   } catch (error) {
+//     console.error("updateSkills:", error);
+//     res.status(500).json({ msg: "Failed to update skills" });
+//   }
+// };
 export const updateSkills = async (req, res) => {
   try {
-    const userId = req.user;
-    const { frontend, backend, tools, frameworks, libraries, languages } =
-      req.body;
+    const userId = req.user.userID || req.user._id;
+    const { category, skill, action } = req.body;
 
-    const user = await User.findByIdAndUpdate(
+    const validCategories = [
+      "frontend",
+      "backend",
+      "tools",
+      "frameworks",
+      "libraries",
+      "languages",
+    ];
+
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid skill category",
+      });
+    }
+
+    if (!skill || !action) {
+      return res.status(400).json({
+        success: false,
+        message: "Skill and action are required",
+      });
+    }
+
+    let updateQuery;
+
+    if (action === "add") {
+      updateQuery = {
+        $addToSet: { [`skills.${category}`]: skill },
+      };
+    } else if (action === "remove") {
+      updateQuery = {
+        $pull: { [`skills.${category}`]: skill },
+      };
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Action must be 'add' or 'remove'",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        skills: { frontend, backend, tools, frameworks, libraries, languages },
-      },
+      updateQuery,
       { new: true }
     );
 
-    res.status(200).json({ msg: "Skills updated", user });
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Skill ${action}ed successfully`,
+      skills: updatedUser.skills,
+    });
+
   } catch (error) {
-    res.status(500).json({ msg: "Error updating skills" });
+    console.error("Update Skills Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating skills",
+    });
   }
 };
+
 
 // ===================== CONNECTIONS =====================
 
 export const sendConnectionRequest = async (req, res) => {
   try {
-    const requesterId = req.user;
     const { targetUserId } = req.body;
+    const requesterId = req.user;
 
-    if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
-      return res.status(400).json({ msg: "Valid targetUserId required." });
-    }
-    if (requesterId === targetUserId) {
-      return res.status(400).json({ msg: "You cannot send a request to yourself." });
-    }
+    if (!mongoose.Types.ObjectId.isValid(targetUserId))
+      return res.status(400).json({ msg: "Invalid user ID" });
 
-    const [requester, targetUser] = await Promise.all([
+    if (requesterId === targetUserId)
+      return res.status(400).json({ msg: "Cannot connect with yourself" });
+
+    const [requester, target] = await Promise.all([
       User.findById(requesterId),
-      User.findById(targetUserId),
+      User.findById(targetUserId)
     ]);
 
-    if (!requester || !targetUser) {
-      return res.status(404).json({ msg: "User not found." });
+    if (!requester || !target)
+      return res.status(404).json({ msg: "User not found" });
+
+    if (requester.connectedUsers.includes(targetUserId))
+      return res.status(409).json({ msg: "Already connected" });
+
+    if (!target.totalPendingRequests.includes(requesterId)) {
+      target.totalPendingRequests.push(requesterId);
+      await target.save();
     }
 
-    // Already connected?
-    if (requester.connectedUsers.some(id => id.toString() === targetUserId)) {
-      return res.status(400).json({ msg: "You are already connected with this user." });
-    }
-
-    // Request already pending on target user's side?
-    if (targetUser.totalPendingRequests.some(id => id.toString() === requesterId)) {
-      return res.status(400).json({ msg: "Connection request already sent." });
-    }
-
-    // If target has sent a request to requester (mutual), accept it automatically
-    const mutualRequestIndex = requester.totalPendingRequests.findIndex(id => id.toString() === targetUserId);
-    if (mutualRequestIndex !== -1) {
-      // remove pending from requester and create connection both sides
-      requester.totalPendingRequests.splice(mutualRequestIndex, 1);
-      requester.connectedUsers.push(targetUserId);
-      targetUser.connectedUsers.push(requesterId);
-
-      await requester.save();
-      await targetUser.save();
-
-      return res.status(200).json({ msg: "Mutual requests found — users are now connected." });
-    }
-
-    // Otherwise add request to targetUser.pending
-    targetUser.totalPendingRequests.push(requesterId);
-    await targetUser.save();
-
-    return res.status(200).json({ msg: "Connection request sent." });
+    res.status(200).json({ msg: "Connection request sent" });
   } catch (error) {
-    console.error("sendConnectionRequest error:", error);
-    return res.status(500).json({ msg: "Server error sending request." });
+    console.error("sendConnectionRequest:", error);
+    res.status(500).json({ msg: "Failed to send request" });
   }
 };
-
 
 export const approveConnectionRequest = async (req, res) => {
   try {
-    const targetUserId = req.user; // the user who is approving
     const { requesterId } = req.body;
+    const userId = req.user;
 
-    if (!requesterId || !mongoose.Types.ObjectId.isValid(requesterId)) {
-      return res.status(400).json({ msg: "Valid requesterId required." });
-    }
-
-    const [targetUser, requester] = await Promise.all([
-      User.findById(targetUserId),
-      User.findById(requesterId),
+    const [user, requester] = await Promise.all([
+      User.findById(userId),
+      User.findById(requesterId)
     ]);
 
-    if (!targetUser || !requester) {
-      return res.status(404).json({ msg: "User not found." });
-    }
+    if (!user || !requester)
+      return res.status(404).json({ msg: "User not found" });
 
-    // Check that request exists
-    const idx = targetUser.totalPendingRequests.findIndex(id => id.toString() === requesterId);
-    if (idx === -1) {
-      return res.status(400).json({ msg: "No pending request from this user." });
-    }
+    user.totalPendingRequests = user.totalPendingRequests.filter(
+      id => id.toString() !== requesterId
+    );
 
-    // Remove pending
-    targetUser.totalPendingRequests.splice(idx, 1);
+    if (!user.connectedUsers.includes(requesterId))
+      user.connectedUsers.push(requesterId);
 
-    // Add to connectedUsers if not already present
-    if (!targetUser.connectedUsers.some(id => id.toString() === requesterId)) {
-      targetUser.connectedUsers.push(requesterId);
-    }
-    if (!requester.connectedUsers.some(id => id.toString() === targetUserId)) {
-      requester.connectedUsers.push(targetUserId);
-    }
+    if (!requester.connectedUsers.includes(userId))
+      requester.connectedUsers.push(userId);
 
-    await Promise.all([targetUser.save(), requester.save()]);
+    await Promise.all([user.save(), requester.save()]);
 
-    return res.status(200).json({ msg: "Connection request approved. Users are now connected." });
+    res.status(200).json({ msg: "Connection approved" });
   } catch (error) {
-    console.error("approveConnectionRequest error:", error);
-    return res.status(500).json({ msg: "Server error approving request." });
+    console.error("approveConnectionRequest:", error);
+    res.status(500).json({ msg: "Failed to approve request" });
   }
 };
+
 export const getPendingRequests = async (req, res) => {
   try {
-    const userId = req.user;
-    const user = await User.findById(userId).populate("totalPendingRequests", "username email");
-    if (!user) return res.status(404).json({ msg: "User not found." });
+    const user = await User.findById(req.user)
+      .populate("totalPendingRequests", "username email");
 
-    return res.status(200).json({ pendingRequests: user.totalPendingRequests || [] });
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    res.status(200).json({ pendingRequests: user.totalPendingRequests });
   } catch (error) {
-    console.error("getPendingRequests error:", error);
-    return res.status(500).json({ msg: "Server error fetching pending requests." });
+    console.error("getPendingRequests:", error);
+    res.status(500).json({ msg: "Failed to fetch pending requests" });
   }
 };
+
 export const removeConnection = async (req, res) => {
   try {
-    const userId = req.user;
     const { targetUserId } = req.body;
 
-    if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
-      return res.status(400).json({ msg: "Valid targetUserId required." });
-    }
-
     const [user, target] = await Promise.all([
-      User.findById(userId),
-      User.findById(targetUserId),
+      User.findById(req.user),
+      User.findById(targetUserId)
     ]);
 
-    if (!user || !target) return res.status(404).json({ msg: "User not found." });
+    if (!user || !target)
+      return res.status(404).json({ msg: "User not found" });
 
-    user.connectedUsers = user.connectedUsers.filter(id => id.toString() !== targetUserId);
-    target.connectedUsers = target.connectedUsers.filter(id => id.toString() !== userId);
+    user.connectedUsers = user.connectedUsers.filter(
+      id => id.toString() !== targetUserId
+    );
+    target.connectedUsers = target.connectedUsers.filter(
+      id => id.toString() !== req.user
+    );
 
     await Promise.all([user.save(), target.save()]);
-
-    return res.status(200).json({ msg: "Connection removed." });
+    res.status(200).json({ msg: "Connection removed" });
   } catch (error) {
-    console.error("removeConnection error:", error);
-    return res.status(500).json({ msg: "Server error removing connection." });
-  }
-};
-// ===================== PROJECTS =====================
-
-export const getUserProjects = async (req, res) => {
-  try {
-    const userId = req.user;
-    const user = await User.findById(userId).populate("activeProjects");
-    res.status(200).json({ projects: user.activeProjects });
-  } catch (error) {
-    res.status(500).json({ msg: "Error fetching projects" });
-  }
-};
-
-export const addActiveProject = async (req, res) => {
-  try {
-    const userId = req.user;
-    const { projectId } = req.body;
-    const user = await User.findById(userId);
-
-    if (!user.activeProjects.includes(projectId)) {
-      user.activeProjects.push(projectId);
-      await user.save();
-    }
-
-    res.status(200).json({ msg: "Project added", user });
-  } catch (error) {
-    res.status(500).json({ msg: "Error adding project" });
+    console.error("removeConnection:", error);
+    res.status(500).json({ msg: "Failed to remove connection" });
   }
 };
 

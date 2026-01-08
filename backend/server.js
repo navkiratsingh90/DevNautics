@@ -26,9 +26,12 @@ app.use(
 );
 
 // ✅ Example of importing routes (uncomment when routes ready)
-import authRouter from './routes/auth-router.js'
 import activityRouter from './routes/activity-router.js'
+import authRouter from './routes/auth-router.js'
+import userRouter from './routes/user-router.js'
+
 app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter)
 app.use("/api/activity", activityRouter);
 
 // ✅ Serve React frontend build (for production)

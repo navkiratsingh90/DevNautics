@@ -18,34 +18,6 @@ const WorkExperience = () => {
   const dispatch = useDispatch();
   const [showForm, setShowForm] = useState(false);
 
-  const [experiences, setExperiences] = useState([
-    {
-      id: 1,
-      company: "Tech Innovations Inc.",
-      role: "Senior Frontend Developer",
-      duration: "Jan 2021 - Present",
-      location: "San Francisco, CA (Remote)",
-      description:
-        "Lead frontend development for the company's flagship SaaS product. Implemented modern React architecture, improved performance by 40%, and mentored junior developers.",
-      certifications: [
-        { name: "React Professional", issuer: "Meta" },
-        { name: "Advanced CSS", issuer: "Udemy" },
-      ],
-      logo: "🚀",
-    },
-    {
-      id: 2,
-      company: "Digital Solutions LLC",
-      role: "Frontend Engineer",
-      duration: "Mar 2018 - Dec 2020",
-      location: "New York, NY",
-      description:
-        "Developed responsive web applications for Fortune 500 clients. Collaborated with UX designers to implement pixel-perfect interfaces and built reusable component libraries.",
-      certifications: [{ name: "JavaScript Algorithms", issuer: "FreeCodeCamp" }],
-      logo: "💼",
-    },
-  ]);
-
   const [formData, setFormData] = useState({
     company: "",
     role: "",

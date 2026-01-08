@@ -1,27 +1,59 @@
 import express from "express";
 import {
-  registerUser,
-  verifyUser,
-  loginUser,
-  logoutUser,
-  forgotPassword,
-  resetPassword,
-  jwtAuth,
-} from "../controllers/authController.js";
+  getUserProfile,
+  updateUserProfile,
+
+  addEducation,
+  deleteEducation,
+
+  addWorkExperience,
+  deleteWorkExperience,
+
+  updateSkills,
+
+  sendConnectionRequest,
+  approveConnectionRequest,
+  getPendingRequests,
+  removeConnection,
+  addProject,
+} from "../controllers/user-controller.js";
+import authMiddleware from '../middlewares/auth-middleware.js'
+import singleUpload from "../middlewares/multer-middleware.js";
 
 const router = express.Router();
 
-// Auth APIs
-router.post("/register", registerUser);
-router.post("/verify", verifyUser);
-router.post("/login", loginUser);
-router.post("/logout", logoutUser);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+/* ===================== PROFILE ===================== */
 
-// Protected test route
-router.get("/me", jwtAuth, (req, res) => {
-  res.status(200).json({ msg: "Authorized", userId: req.user });
-});
+router.get("/profile", authMiddleware, getUserProfile);
+router.put("/update-profile", authMiddleware, updateUserProfile);
+
+/* ===================== EDUCATION ===================== */
+
+router.post("/education", authMiddleware, addEducation);
+router.delete("/education/:eduId", authMiddleware, deleteEducation);
+
+/* ===================== WORK EXPERIENCE ===================== */
+
+router.post("/work-experience", authMiddleware, addWorkExperience);
+router.delete("/work-experience/:workId", authMiddleware, deleteWorkExperience);
+
+router.post("/project",singleUpload ,authMiddleware, addProject);
+/* ===================== SKILLS ===================== */
+
+router.put("/update-skills", authMiddleware, updateSkills);
+
+/* ===================== CONNECTIONS ===================== */
+
+// send request
+router.post("/connections/request", authMiddleware, sendConnectionRequest);
+
+// approve request
+router.post("/connections/approve", authMiddleware, approveConnectionRequest);
+
+// get pending requests
+router.get("/connections/pending", authMiddleware, getPendingRequests);
+
+// remove connection
+router.delete("/connections/remove", authMiddleware, removeConnection);
 
 export default router;

@@ -6,6 +6,7 @@ const ProjectsPage = () => {
  const darkMode = useSelector((state) => state.Theme.darkMode)
   const [showForm, setShowForm] = useState(false);
   const dispatch = useDispatch()
+  const user = useSelector((state) => state.Auth.user)
   const [projects, setProjects] = useState([
     {
       id: 1,
@@ -170,12 +171,16 @@ const ProjectsPage = () => {
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(project => (
+          {user.projects.map(project => (
             <div key={project.id} className={`rounded-xl shadow-lg overflow-hidden flex flex-col ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
               {/* Project Screenshot/Icon */}
-              <div className={`h-48 flex items-center justify-center text-6xl ${darkMode ? 'bg-blue-900' : 'bg-blue-100'}`}>
-                {project.screenshot}
-              </div>
+              <div className="rounded-lg overflow-hidden mb-4">
+                        <img 
+                          src={project.file} 
+                          alt="Post media" 
+                          className="w-full h-auto object-cover max-h-96"
+                        />
+                      </div>
               
               <div className="p-6 flex-1">
                 {/* Project Header */}
@@ -212,7 +217,7 @@ const ProjectsPage = () => {
                 <div className="mb-4">
                   <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Technologies</h3>
                   <div className="flex flex-wrap gap-2">
-                    {project.technologies.map((tech, idx) => (
+                    {project.techStack.map((tech, idx) => (
                       <span 
                         key={idx} 
                         className={`px-3 py-1 rounded-full text-sm ${darkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}
@@ -224,7 +229,7 @@ const ProjectsPage = () => {
                 </div>
                 
                 {/* Collaborators */}
-                <div>
+                {/* <div>
                   <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Collaborators</h3>
                   <div className="space-y-3">
                     {project.collaborators.map((collab, idx) => (
@@ -251,12 +256,12 @@ const ProjectsPage = () => {
                       </div>
                     ))}
                   </div>
-                </div>
+                </div> */}
               </div>
               
               {/* Project Footer */}
               <div className={`px-6 py-3 ${darkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'} text-sm font-medium flex justify-between items-center`}>
-                <span>Project #{project.id}</span>
+                <span>Project #{project._id}</span>
                 <a 
                   href={project.liveLink} 
                   target="_blank" 
@@ -298,117 +303,172 @@ const ProjectsPage = () => {
       {/* Add Project Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className={`rounded-2xl shadow-lg w-full max-w-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="p-6 border-b border-gray-700">
-              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Add New Project</h2>
-              <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Fill in your project details</p>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Project Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  required
-                ></textarea>
-              </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  GitHub Link
-                </label>
-                <input
-                  type="url"
-                  name="githubLink"
-                  value={formData.githubLink}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Live Project Link
-                </label>
-                <input
-                  type="url"
-                  name="liveLink"
-                  value={formData.liveLink}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Technologies (comma separated)
-                </label>
-                <input
-                  type="text"
-                  name="technologies"
-                  value={formData.technologies}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  placeholder="React, Node.js, MongoDB"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Your Contributions (comma separated)
-                </label>
-                <textarea
-                  name="collaborators"
-                  value={formData.collaborators}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                  placeholder="Designed UI, Implemented backend, Deployed to production"
-                  required
-                ></textarea>
-              </div>
-              
-              <div className="flex justify-end gap-3 pt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Add Project
-                </button>
-              </div>
-            </form>
+        <div className={`rounded-2xl shadow-lg w-full max-w-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          
+          {/* Header */}
+          <div className="p-6 border-b border-gray-700">
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              Add New Project
+            </h2>
+            <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Fill in your project details
+            </p>
           </div>
+      
+          {/* Form */}
+          <form
+  onSubmit={handleSubmit}
+  className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+>
+
+      
+            {/* Project Title */}
+<div className="md:col-span-2">
+
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Project Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              />
+            </div>
+      
+           {/* Description */}
+<div className="md:col-span-2">
+
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows="3"
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              />
+            </div>
+      
+            {/* Tech Stack */}
+           {/* Tech Stack */}
+<div className="md:col-span-2">
+
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Tech Stack (comma separated)
+              </label>
+              <input
+                type="text"
+                name="techStack"
+                value={formData.techStack}
+                onChange={handleInputChange}
+                placeholder="React, Node.js, MongoDB"
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              />
+            </div>
+      
+            {/* Role */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Role
+              </label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              >
+                <option value="">Select Role</option>
+                <option value="Frontend">Frontend</option>
+                <option value="Backend">Backend</option>
+                <option value="Full Stack">Full Stack</option>
+              </select>
+            </div>
+      
+            {/* Duration */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Duration
+              </label>
+              <input
+                type="text"
+                name="duration"
+                value={formData.duration}
+                onChange={handleInputChange}
+                placeholder="Jan 2024 – Mar 2024"
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              />
+            </div>
+      
+            {/* GitHub */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                GitHub Link
+              </label>
+              <input
+                type="url"
+                name="githubLink"
+                value={formData.githubLink}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              />
+            </div>
+      
+            {/* Live Link */}
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Live Project Link
+              </label>
+              <input
+                type="url"
+                name="liveLink"
+                value={formData.liveLink}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                }`}
+              />
+            </div>
+      
+            {/* Buttons */}
+            <div className="md:col-span-2 flex justify-end gap-3 pt-6">
+
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className={`px-4 py-2 rounded-lg ${
+                  darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Add Project
+              </button>
+            </div>
+      
+          </form>
         </div>
+      </div>
+      
       )}
     </div>
   );

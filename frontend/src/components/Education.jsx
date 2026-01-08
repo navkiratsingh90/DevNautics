@@ -7,8 +7,6 @@ const EducationPage = () => {
   const user = useSelector(state => state.Auth.user)
   const dispatch = useDispatch()
   const [showForm, setShowForm] = useState(false);
-  // const [education,setEducation] = useState(user.education)
-
 
   const [formData, setFormData] = useState({
     schoolName: "",
@@ -27,15 +25,6 @@ const EducationPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newEducation = {
-      id: user.education.length + 1,
-      institution: formData.schoolName,
-      degree: formData.degree,
-      duration: formData.duration,
-      description: formData.description,
-    };
-    
-    setEducation([newEducation, ...education]);
     setFormData({
       schoolName: "",
       degree: "",
@@ -69,17 +58,12 @@ const EducationPage = () => {
             )}
           </button>
         </header>
-
-        {/* Add Education Button */}
-        
-
-        {/* Education Timeline */}
         <div className="relative">
           {/* Timeline line */}
           <div className={`absolute left-4 top-0 h-full w-1 ${darkMode ? 'bg-blue-700' : 'bg-blue-300'} -z-10`}></div>
           
           {/* Education Items */}
-          {[].map((edu, index) => (
+          {user.education.map((edu, index) => (
             <div key={edu.id} className="flex mb-12">
               {/* Timeline indicator */}
               <div className="flex-shrink-0 mr-6">
@@ -88,21 +72,50 @@ const EducationPage = () => {
                 </div>
               </div>
               
-              {/* Content */}
-              <div className={`flex-1 rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{edu.schoolName}</h2>
-                      <p className={`text-lg mt-1 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{edu.degree}</p>
-                    </div>
-                    <div className={`text-right ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <p className="font-medium">{edu.duration}</p>
-                      <p className="text-sm">{edu.description}</p>
-                    </div>
+              <div
+              className={`flex-1 rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1
+              ${darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}
+            >
+              <div className="p-6">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                  
+                  {/* Left Content */}
+                  <div>
+                    <h2
+                      className={`text-2xl font-semibold tracking-tight 
+                      ${darkMode ? 'text-white' : 'text-gray-900'}`}
+                    >
+                      {edu.schoolName}
+                    </h2>
+
+                    <p
+                      className={`text-base mt-1 font-medium 
+                      ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}
+                    >
+                      {edu.degree}
+                    </p>
+
+                    <p
+                      className={`text-sm mt-2 leading-relaxed 
+                      ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                    >
+                      {edu.description}
+                    </p>
                   </div>
+
+                  {/* Right Content */}
+                  <div
+                    className={`text-sm md:text-right font-medium whitespace-nowrap
+                    ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                  >
+                    {edu.duration}
+                  </div>
+
                 </div>
               </div>
+            </div>
+
+            
             </div>
           ))}
         </div>

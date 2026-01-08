@@ -166,7 +166,7 @@ const UserProfile = () => {
               {[
                 { value: user.connectedUsers.length, label: "Connections" },
                 { value: user.activityPosted.length, label: "Posts" },
-                { value: user.activeProjects.length, label: "Projects" }
+                { value: user.projects.length, label: "Projects" }
               ].map((stat) => (
                 <div
                   key={stat.label}

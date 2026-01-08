@@ -14,12 +14,10 @@ const discussionSchema = new mongoose.Schema({
 		ref: "User",
 		required: true
 	},	
-	joinedMembers : [
-		{
-			username : mongoose.Schema.Types.ObjectId,
-			ref : "User",
-		}
-	],
+	joinedMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+pendingRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
   unreadMessages: {
     type: Number,
     default: 0,
@@ -34,22 +32,10 @@ const discussionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-	admins : [
-		{
-			username : mongoose.Schema.Types.ObjectId,
-			ref : "User"
-		}
-	],
   topics: {
     type: [String],
     default: [],
   },
-	pendingRequests : [
-		{
-			username : mongoose.Schema.Types.ObjectId,
-			ref : "User"
-		}
-	]
 }, { timestamps: true });
 
 export default mongoose.model("discussion", discussionSchema);
