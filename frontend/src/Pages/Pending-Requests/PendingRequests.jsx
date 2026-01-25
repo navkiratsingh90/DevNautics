@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../../Features/ThemeSlice";
+import { getPendingRequests } from "../../services/userApis";
 
 const PendingRequestsPage = () => {
   const darkMode = useSelector((state) => state.Theme.darkMode)
   const dispatch = useDispatch()
+  const [data,setData] = useState(null)
   const [requests, setRequests] = useState([
     {
       id: 1,
@@ -80,7 +82,38 @@ const PendingRequestsPage = () => {
     setRequests([]);
     console.log("Accepted all requests");
   };
-
+  const processPendingRequests = (res) => {
+    const allRequests = []
+    for (const req of res.pendingRequests){
+      let allSkills = [];
+      const about = req.about;
+      const username = req.username
+      const skills = req.skills
+      Object.keys(skills).forEach(key => {
+        skills[key].forEach(ele => {
+          allSkills.push(ele);
+        });
+      });
+      const currData = {
+        allSkills,
+        about,
+        username
+      }
+      allRequests.push(currData)
+    }
+    setData(allRequests)
+  }
+  useEffect(() => {
+    const fetchRequests = async () => {
+      const res = await getPendingRequests()
+      console.log(res.pendingRequests);
+      // const skill = []
+      processPendingRequests(res)
+      console.log(data);
+    }
+     fetchRequests()
+  },[])
+  if (!data) return <div>Loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -93,14 +126,7 @@ const PendingRequestsPage = () => {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            {requests.length > 0 && (
-              <button
-                onClick={handleAcceptAll}
-                className={`px-4 py-2 rounded-lg ${darkMode ? 'bg-green-700 hover:bg-green-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}
-              >
-                Accept All
-              </button>
-            )}
+            
             <button
               onClick={() => dispatch(handleTheme())}
               className={`p-3 rounded-full ${darkMode ? 'bg-blue-800 text-blue-200' : 'bg-blue-100 text-blue-800'}`}
@@ -119,7 +145,7 @@ const PendingRequestsPage = () => {
         </header>
 
         {/* Empty State */}
-        {requests.length === 0 ? (
+        {data.length === 0 ? (
           <div className={`rounded-2xl p-12 text-center ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
             <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-blue-900' : 'bg-blue-100'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,14 +164,14 @@ const PendingRequestsPage = () => {
           <>
             {/* Requests List */}
             <div className="space-y-6">
-              {requests.map(request => (
+              {data.map(request => (
                 <div key={request.id} className={`rounded-2xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                   <div className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
                       {/* User Info */}
                       <div className="flex-shrink-0">
                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto md:mx-0">
-                          <span className="text-white text-2xl font-bold">{request.user.avatar}</span>
+                          <span className="text-white text-2xl font-bold">{request.username.slice(0,2).toLocaleUpperCase()}</span>
                         </div>
                       </div>
                       
@@ -154,19 +180,19 @@ const PendingRequestsPage = () => {
                         <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
                           <div>
                             <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                              {request.user.name}
+                              {request.username}
                             </h3>
-                            <p className={darkMode ? 'text-blue-400' : 'text-blue-600'}>@{request.user.username}</p>
-                            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {/* <p className={darkMode ? 'text-blue-400' : 'text-blue-600'}>@{request.user.username}</p> */}
+                            {/* <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                               {request.user.role} • {request.user.location}
-                            </p>
-                            <p className={`text-sm mt-1 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                            </p> */}
+                            {/* <p className={`text-sm mt-1 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
                               {request.user.mutualConnections} mutual connections
-                            </p>
+                            </p> */}
                           </div>
-                          <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-2 md:mt-0`}>
+                          {/* <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-400'} mt-2 md:mt-0`}>
                             {request.timestamp}
-                          </span>
+                          </span> */}
                         </div>
                         
                         
@@ -175,7 +201,7 @@ const PendingRequestsPage = () => {
                         <div className="mb-6">
                           <h4 className={`font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Skills & Expertise</h4>
                           <div className="flex flex-wrap gap-2">
-                            {request.skills.map((skill, index) => (
+                            {request.allSkills.slice(0,4).map((skill, index) => (
                               <span 
                                 key={index} 
                                 className={`px-3 py-1 rounded-full text-sm ${darkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}

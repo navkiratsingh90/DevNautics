@@ -42,7 +42,7 @@ export const createActivity = async (req, res) => {
 /* ================= GET ALL ACTIVITIES ================= */
 export const getActivities = async (req, res) => {
   try {
-    const { page = 1, limit = 10, userId } = req.query;
+    const { page = 1, limit = 2, userId } = req.query;
 
     let query = {};
     if (userId) query.createdBy = userId;

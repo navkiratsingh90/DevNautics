@@ -10,7 +10,7 @@ import transporter from '../utils/nodemailer.js'
 export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    console.log(username, email,password);
+    // console.log(username, email,password);
     if (!username || !email || !password)
       return res.status(400).json({ msg: "All fields required" });
 

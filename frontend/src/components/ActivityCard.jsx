@@ -5,19 +5,20 @@ import { IoSend } from "react-icons/io5"; // arrow icon
 import { useSelector } from 'react-redux';
 
 
-const ActivityCard = ({posts,darkMode}) => {
+const ActivityCard = ({post,darkMode, currentPage, totalPage}) => {
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [posts,setPosts] = useState(post)
+  const [totalPages, setTotalPages] = useState(totalPage)
   const [activeMenu, setActiveMenu] = useState(null);
    const [comment, setComment] = useState("");
-  const [currPage, setCurrPage] = useState(1)
+  const [currPage, setCurrPage] = useState(currentPage)
   const [userFeed, setUserFeed] = useState([])
   const [showComments, setShowComments] = useState(false);
 const [selectedPost, setSelectedPost] = useState(null);
   const userId = useSelector((state) => state.Auth.userId)
 
   console.log("posts = ", posts);
-  const limit = 5
+  const limit = 3
   const handleSubmitComment = async (id) => {
     console.log(comment);
     if (comment.trim().length == 0) return;
@@ -58,8 +59,17 @@ const [selectedPost, setSelectedPost] = useState(null);
 
   }
   useEffect(() => {
-    // getUserFeed()
-  }, [])
+    const fetchActivities = async () => {
+      const res = await getActivities({page});
+      // toast.success("successful")/
+      console.log(res);
+      setTotalPages(res.totalPages)
+      setCurrPage(res.currentPage)
+      setPosts(res.data)
+    };
+  
+    fetchActivities();
+  }, [page])
 	return (
 		<>
     <CommentModal

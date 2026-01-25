@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import jwt from 'jsonwebtoken'
+import bcrypt from "bcryptjs";
+
+const SALT_ROUNDS = 10
 
 const educationSchema = new mongoose.Schema({
   schoolName: { type: String, required: true },
@@ -11,7 +15,7 @@ const projectSchema = new mongoose.Schema({
   description: { type: String },
   file : {type : String},
   techStack: [String],
-  role: { type: String }, // Frontend / Backend / Full Stack
+  role: { type: String },
   duration: { type: String },
   githubLink: { type: String },
   liveLink: { type: String },

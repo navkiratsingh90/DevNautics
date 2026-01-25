@@ -5,6 +5,7 @@ import cloudinary from '../utils/cloudinary.js'
 import getDataUri from '../utils/datauri.js';
 import ProjectFlow from "../models/workspace-model.js";
 import Discussion from "../models/discussion-model.js"
+import mongoose from 'mongoose';
 // ===================== PROFILE =====================
 
 export const getUserProfile = async (req, res) => {
@@ -270,16 +271,16 @@ export const updateSkills = async (req, res) => {
 export const sendConnectionRequest = async (req, res) => {
   try {
     const { targetUserId } = req.body;
-    const requesterId = req.user;
+    const userId = req.user.userID || req.user._id;
 
     if (!mongoose.Types.ObjectId.isValid(targetUserId))
       return res.status(400).json({ msg: "Invalid user ID" });
 
-    if (requesterId === targetUserId)
+    if (userId === targetUserId)
       return res.status(400).json({ msg: "Cannot connect with yourself" });
 
     const [requester, target] = await Promise.all([
-      User.findById(requesterId),
+      User.findById(userId),
       User.findById(targetUserId)
     ]);
 
@@ -289,12 +290,16 @@ export const sendConnectionRequest = async (req, res) => {
     if (requester.connectedUsers.includes(targetUserId))
       return res.status(409).json({ msg: "Already connected" });
 
-    if (!target.totalPendingRequests.includes(requesterId)) {
-      target.totalPendingRequests.push(requesterId);
+    if (!target.totalPendingRequests.includes(userId)) {
+      target.totalPendingRequests.push(userId);
+      await target.save();
+    }
+    else {
+      target.totalPendingRequests.pop(userId);
       await target.save();
     }
 
-    res.status(200).json({ msg: "Connection request sent" });
+    res.status(200).json({ msg: "Connection request sent" , target});
   } catch (error) {
     console.error("sendConnectionRequest:", error);
     res.status(500).json({ msg: "Failed to send request" });
@@ -335,8 +340,9 @@ export const approveConnectionRequest = async (req, res) => {
 
 export const getPendingRequests = async (req, res) => {
   try {
-    const user = await User.findById(req.user)
-      .populate("totalPendingRequests", "username email");
+    const userId = req.user.userID || req.user._id;
+    const user = await User.findById(userId)
+      .populate("totalPendingRequests");
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 

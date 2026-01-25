@@ -12,7 +12,7 @@ const API = axios.create({
 /* ================= CREATE ACTIVITY ================= */
 export const createActivity = async (data) => {
   try {
-    const res = await API.post("/", data, {
+    const res = await API.post("/create", data, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 

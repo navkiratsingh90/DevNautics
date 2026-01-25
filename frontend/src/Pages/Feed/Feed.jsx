@@ -8,6 +8,8 @@ const FeedPage = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [posts, setPosts] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
+  const [totalPages, setTotalPages] = useState(1)
+  const [currPage, setCurrPage] = useState(1)
   const [newPost, setNewPost] = useState("");
   const [showNewPostModal, setShowNewPostModal] = useState(false);
   const [pendingRequests, setPendingRequests] = useState([
@@ -108,6 +110,8 @@ const FeedPage = () => {
       const res = await getActivities();
       toast.success("successful")
       console.log(res);
+      setTotalPages(res.totalPages)
+      setCurrPage(res.currentPage)
       setPosts(res.data)
     };
   
@@ -151,7 +155,7 @@ const FeedPage = () => {
 
             {/* Posts Feed */}
             <div className="space-y-6">
-                <ActivityCard posts={posts}  darkMode={darkMode} />
+                <ActivityCard post={posts} darkMode={darkMode} currentPage={currPage} totalPage={totalPages}  />
             </div>
           </div>
 

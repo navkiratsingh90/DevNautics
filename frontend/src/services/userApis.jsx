@@ -107,7 +107,7 @@ export const approveConnectionRequest = async (requesterId) => {
 };
 export const getPendingRequests = async () => {
   try {
-    const res = await API.get("/pending");
+    const res = await API.get("/connections/pending");
     return res.data;
   } catch (error) {
     toast.error("Failed to load requests");
