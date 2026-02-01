@@ -7,7 +7,7 @@ const discussionSchema = new mongoose.Schema({
   },
   totalMembers: {
     type: Number,
-    required: true,
+    default : 0
   },
 	createdBy: {
 		type: mongoose.Schema.Types.ObjectId,
@@ -17,12 +17,7 @@ const discussionSchema = new mongoose.Schema({
 	joinedMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 pendingRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
-  unreadMessages: {
-    type: Number,
-    default: 0,
-  },
-  profilePic: {
+  file: {
     type: String, // Emoji or URL
   },
   about: {

@@ -1,14 +1,69 @@
-import express from 'express'
+import express from "express";
+import {
+    createNewProjectCollaboration,
+    updateCurrentProject,
+    getAllProjects,
+    getProjectById,
+    deleteProjectById,
+    requestForCollaboration,
+    acceptApplication,
+} from "../controllers/project-controller.js"
 
-const Router = express.Router()
+import authMiddleware  from "../middlewares/auth-middleware.js";
 
-Router.post('/create')
-Router.get('/get')
-Router.get('/get/:id')
-Router.put('/update/:id')
-Router.put('/addMember')
-Router.delete('/delete/:id')
+const router = express.Router();
 
+/**
+ * =========================
+ * PROJECT COLLAB ROUTES
+ * =========================
+ */
 
+// Create new project collaboration
+router.post(
+    "/create",
+    authMiddleware,
+    createNewProjectCollaboration
+);
 
-export default Router
+// Get all projects (with filters, sort, pagination)
+router.get(
+    "/get",
+    getAllProjects
+);
+
+// Get project by ID
+router.get(
+    "/:id",
+    getProjectById
+);
+
+// Update project (add roles / team members / status / description)
+router.put(
+    "/:id",
+    authMiddleware,
+    updateCurrentProject
+);
+
+// Delete project
+router.delete(
+    "/:id",
+    authMiddleware,
+    deleteProjectById
+);
+
+// Request for collaboration
+router.post(
+    "/:id/request",
+    authMiddleware,
+    requestForCollaboration
+);
+
+// Accept collaboration application
+router.post(
+    "/accept/:applicationId",
+    authMiddleware,
+    acceptApplication
+);
+
+export default router;

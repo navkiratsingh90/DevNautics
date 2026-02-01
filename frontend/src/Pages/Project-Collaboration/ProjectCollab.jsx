@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from "react-redux";
 import { Link } from 'react-router';
+import { createProjectCollab, getAllProjects } from '../../services/collabApis';
 
 const ProjectCollabPage = () => {
   const darkMode = useSelector(state => state.Theme.darkMode);
@@ -258,7 +259,20 @@ const ProjectCollabPage = () => {
     };
     return colors[category] || "bg-gray-500";
   };
-
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await getAllProjects({});
+        console.log(res.data);
+      } catch (err) {
+        console.error(err.response?.data || err.message);
+      }
+    };
+  
+    fetchProjects();
+  }, []);
+  
+  
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">

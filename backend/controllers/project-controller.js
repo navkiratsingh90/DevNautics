@@ -1,5 +1,6 @@
-import ProjectCollab from "../models/projectCollab-model.js";
-import requestCollab from "../models/requestCollab-model.js";
+import ProjectCollab from "../models/collabspace-model.js";
+import requestCollabModel from "../models/requestCollab-model.js";
+// import requestCollab from "../models/requestCollab-model.js";
 
 export const createNewProjectCollaboration = async (req, res) => {
     try {
@@ -19,11 +20,12 @@ export const createNewProjectCollaboration = async (req, res) => {
             !status ||
             !problemStatement ||
             !rolesLookingFor ||
-            techStackUsed ||
+            !techStackUsed ||
             !totalTeamSize
         ) {
             res.status(400).send({ msg: "invalid Credentials!" });
         }
+        const userId = req.user.userID || req.user._id;
         for (let member of currentTeamMembers) {
             if (!member.user || !member.roleAssigned) {
                 return res.status(400).json({
@@ -32,11 +34,22 @@ export const createNewProjectCollaboration = async (req, res) => {
                 });
             }
         }
-        if (currentTeamMembers.length > project.totalTeamSize) {
+        if (currentTeamMembers.length > totalTeamSize) {
             return res.status(400).json({
                 message: "Team size exceeds totalTeamSize of the project",
             });
         }
+        const exists = currentTeamMembers.some(
+            member => member.user.toString() === userId.toString()
+        );
+        
+        if (!exists) {
+            currentTeamMembers.push({
+                user: userId,
+                roleAssigned: "Project Owner" // or any role
+            });
+        }
+        
         const newProject = new ProjectCollab({
             title,
             description,
@@ -46,7 +59,7 @@ export const createNewProjectCollaboration = async (req, res) => {
             techStackUsed,
             totalTeamSize,
             currentTeamMembers,
-            createdBy: req.user?._id,
+            createdBy: userId,
         });
 
         await newProject.save();
@@ -65,12 +78,12 @@ export const updateCurrentProject = async (req, res) => {
         const { id } = req.params;
         const { description, status, rolesLookingFor, currentTeamMembers } =
             req.body;
-
+            const userId = req.user.userID || req.user._id;
         const project = await ProjectCollab.findById(id);
         if (!project) {
             return res.status(404).json({ message: "Project not found" });
         }
-
+        if (project.createdBy.toString() != userId) return res.status(404).json({ message: "you're not owner of the post" });
         if (currentTeamMembers) {
             for (let member of currentTeamMembers) {
                 const existingMember = project.currentTeamMembers.some(
@@ -245,7 +258,8 @@ export const deleteProjectById = async (req, res) => {
 export const requestForCollaboration = async (req, res) => {
     try {
         const projectId = req.params.id; // Correct param
-        const userId = req.user._id;
+        const userId = req.user.userID || req.user._id
+        // console.log(userId);
         const { email, message, githubLink, resume, experience, rolesApplied } =
             req.body;
 
@@ -269,7 +283,7 @@ export const requestForCollaboration = async (req, res) => {
             });
         }
 
-        const newRequest = await requestCollab.create({
+        const newRequest = await requestCollabModel.create({
             email,
             message,
             resume,
@@ -303,9 +317,9 @@ export const requestForCollaboration = async (req, res) => {
 export const acceptApplication = async (req, res) => {
     try {
         const { applicationId } = req.params;
-        const { rolesAssigned } = req.body;
-
-        if (!applicationId || !rolesAssigned) {
+        // const { rolesAssigned } = req.body;
+        const userId = req.user.userID || req.user._id
+        if (!applicationId) {
             return res
                 .status(400)
                 .json({
@@ -313,7 +327,7 @@ export const acceptApplication = async (req, res) => {
                 });
         }
 
-        const application = await requestCollab.findById(applicationId);
+        const application = await requestCollabModel.findById(applicationId);
         if (!application) {
             return res.status(404).json({ message: "Application not found." });
         }
@@ -327,27 +341,32 @@ export const acceptApplication = async (req, res) => {
                 .json({ message: "Associated project not found." });
         }
 
-        if (req.user._id.toString() !== project.createdBy.toString()) {
+        if (userId.toString() !== project.createdBy.toString()) {
             return res
                 .status(403)
                 .json({
                     message:
-                        "You are not authorized to accept applications for this project.",
+                        "You are not authorized to accept applications for this project."
                 });
         }
 
-        const invalidRoles = rolesAssigned.filter(
-            (role) => !project.rolesLookingFor.includes(role)
-        );
-        if (invalidRoles.length > 0) {
-            return res.status(400).json({
-                message: `Invalid role(s) assigned: ${invalidRoles.join(", ")}`,
-            });
-        }
+        // const invalidRoles = project.rolesAssigned.filter(
+        //     (role) => !project.rolesLookingFor.includes(role)
+        // );
+        // if (invalidRoles.length > 0) {
+        //     return res.status(400).json({
+        //         message: `Invalid role(s) assigned: ${invalidRoles.join(", ")}`,
+        //     });
+        // }
+        let Roles = "";
 
+        for (let role of application.rolesApplied) {
+            Roles += role + ", ";
+        }
+        Roles = Roles.slice(0, -2);
         const acceptedMember = {
             user: application.createdBy,
-            roleAssigned: rolesAssigned,
+            roleAssigned: Roles,
         };
 
         const updatedProject = await ProjectCollab.findByIdAndUpdate(
@@ -359,7 +378,7 @@ export const acceptApplication = async (req, res) => {
             { new: true }
         );
 
-        await requestCollab.findByIdAndDelete(applicationId);
+        await requestCollabModel.findByIdAndDelete(applicationId);
 
         return res.status(200).json({
             message: "Application accepted successfully.",

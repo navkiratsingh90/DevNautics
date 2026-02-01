@@ -5,13 +5,22 @@ const projectCollabSchema = new mongoose.Schema({
 		type : String,
 		required : true
 	},
+	// file : {
+	// 	type : String,
+	// 	required : true
+	// },
 	description : {
 		type : String,
 		required : true
 	},
 	status : {
 		type : String,
-		required : true,
+		enum : [ "Open",
+			"In Progress",
+			"On Hold",
+			"Completed",
+			"Closed"],
+		default : "Open"
 	},
 	problemStatement : {
 		type : String,
@@ -31,7 +40,8 @@ const projectCollabSchema = new mongoose.Schema({
 		type : Number,
 		required : true,
 	},
-	currentTeamMembers: [
+	currentTeamMembers: {
+		type : [
 		{
 			user: {
 				type: mongoose.Schema.Types.ObjectId,
@@ -43,19 +53,24 @@ const projectCollabSchema = new mongoose.Schema({
 				required: true
 			}
 		}
-	]
+	],
+	default : []
+}
 ,	
 	createdBy : {
 		type : mongoose.Schema.Types.ObjectId,
 		ref : "User"
 	},
-	pendingRequests: [
+	pendingRequests: {
+		type : [
 			{ 
 				type: mongoose.Schema.Types.ObjectId, 
 				ref: 'User' 
 			},
 			
-	]
+	],
+	default : []
+}
 	
 },{ timestamps : true})
 

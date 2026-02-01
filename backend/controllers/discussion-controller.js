@@ -1,36 +1,31 @@
-import Discussion from "../models/discussion.js";
+import Discussion from "../models/discussion-model.js";
 import mongoose from "mongoose";
+import getDataUri from "../utils/datauri.js";
+import cloudinary from "../utils/cloudinary.js";
+import User from "../models/user-model.js";
 
 export const createDiscussion = async (req, res) => {
     try {
-        const { groupName, totalMembers, about, profilePic, topics } = req.body;
-        const creatorId = req.user?.userID;
+        const { groupName, about, topics } = req.body;
+        const creatorId = req.user.userID || req.user._id;
 
-        if (!groupName || !totalMembers || !creatorId) {
+        if (!groupName || !creatorId) {
             return res.status(400).json({ msg: "Missing required fields." });
         }
-
-        let uploadedProfilePic = "";
-
-        if (profilePic) {
-            const uploadResponse = await cloudinary.uploader.upload(
-                profilePic,
-                {
-                    folder: "discussions/profile_pics",
-                    resource_type: "auto",
-                }
-            );
-            uploadedProfilePic = uploadResponse.secure_url;
-        }
+        let fileUrl = null;
+        if (req.file) {
+            const fileUri = getDataUri(req.file);
+            const uploadRes = await cloudinary.uploader.upload(fileUri.content);
+            fileUrl = uploadRes.secure_url;
+          }
 
         const newDiscussion = await Discussion.create({
             groupName,
-            totalMembers,
             createdBy: creatorId,
-            joinedMembers: [{ username: creatorId }],
-            admins: [{ username: creatorId }],
+            joinedMembers: [ creatorId ],
+            admins: [ creatorId ],
             about: about || "",
-            profilePic: uploadedProfilePic || "",
+            file: fileUrl ,
             topics: topics || [],
         });
 
@@ -48,18 +43,18 @@ export const createDiscussion = async (req, res) => {
 
 export const getDiscussions = async (req, res) => {
     try {
-        const userId = req.user?.userID;
+        const userId = req.user.userID || req.user._id;
 
         if (!userId) {
             return res.status(400).json({ msg: "Unauthorized access." });
         }
 
         const discussions = await Discussion.find({
-            $or: [{ "joinedMembers.username": userId }, { createdBy: userId }],
+            $or: [{ joinedMembers: userId }, { createdBy: userId }],
         })
             .populate("createdBy", "name email")
             .populate("admins.username", "name email")
-            .populate("joinedMembers.username", "name email");
+            .populate("joinedMembers", "name email");
 
         return res.status(200).json({ discussions });
     } catch (error) {
@@ -72,8 +67,9 @@ export const getDiscussions = async (req, res) => {
 
 export const editDiscussion = async (req, res) => {
     try {
-        const { discussionId, about, profilePic } = req.body;
-        const userId = req.user?.userID;
+        const { discussionId, about , groupName} = req.body;
+        // console.log(discussionId);
+        const userId = req.user.userID || req.user._id;
 
         if (!discussionId || !userId) {
             return res.status(400).json({ msg: "Missing required fields." });
@@ -85,7 +81,7 @@ export const editDiscussion = async (req, res) => {
         }
 
         const isAdmin = discussion.admins.some(
-            (admin) => admin.username.toString() === userId.toString()
+            (admin) => admin.toString() === userId.toString()
         );
         const isCreator = discussion.createdBy.toString() === userId.toString();
 
@@ -98,7 +94,16 @@ export const editDiscussion = async (req, res) => {
         }
 
         if (about !== undefined) discussion.about = about;
-        if (profilePic !== undefined) discussion.profilePic = profilePic;
+        if (groupName !== undefined) discussion.groupName = groupName
+        if (req.file) {
+            const fileUri = getDataUri(req.file);
+            const uploadRes = await cloudinary.uploader.upload(
+                fileUri.content,
+                // { folder: "discussion_profiles" }
+            );
+            discussion.file = uploadRes.secure_url
+        }
+
 
         const updated = await discussion.save();
 
@@ -155,7 +160,7 @@ export const deleteDiscussion = async (req, res) => {
 export const giveAdminRole = async (req, res) => {
     try {
         const { discussionId, userIdToMakeAdmin } = req.body;
-        const requesterId = req.user?.userID;
+        const requesterId =req.user.userID || req.user._id;
 
         if (!discussionId || !userIdToMakeAdmin || !requesterId) {
             return res.status(400).json({ msg: "Missing required fields." });
@@ -168,7 +173,7 @@ export const giveAdminRole = async (req, res) => {
 
         const isRequesterAdmin =
             discussion.admins.some(
-                (a) => a.username.toString() === requesterId.toString()
+                (a) => a.toString() === requesterId.toString()
             ) || discussion.createdBy.toString() === requesterId.toString();
 
         if (!isRequesterAdmin) {
@@ -178,7 +183,7 @@ export const giveAdminRole = async (req, res) => {
         }
 
         const isMember = discussion.joinedMembers.some(
-            (m) => m.username.toString() === userIdToMakeAdmin.toString()
+            (m) => m.toString() === userIdToMakeAdmin.toString()
         );
         if (!isMember) {
             return res
@@ -187,13 +192,23 @@ export const giveAdminRole = async (req, res) => {
         }
 
         const alreadyAdmin = discussion.admins.some(
-            (a) => a.username.toString() === userIdToMakeAdmin.toString()
+            (a) => a.toString() === userIdToMakeAdmin.toString()
         );
         if (alreadyAdmin) {
-            return res.status(400).json({ msg: "User is already an admin." });
+            let idx = null;
+            for (let i=0;i<discussion.admins.length;i++){
+                if (discussion.admins[i] == userIdToMakeAdmin){
+                    idx = i;
+                    break;
+                } 
+            }
+            // const idx = discussion.admins.findIndex(userIdToMakeAdmin.toString());
+            discussion.admins.splice(idx,1);
+            await discussion.save();
+            return res.status(200).json({ msg: "user removed from admin position", discussion });
         }
 
-        discussion.admins.push({ username: userIdToMakeAdmin });
+        discussion.admins.push(userIdToMakeAdmin );
         await discussion.save();
 
         return res
@@ -210,7 +225,7 @@ export const giveAdminRole = async (req, res) => {
 export const requestToJoinDiscussion = async (req, res) => {
     try {
         const { discussionId } = req.body;
-        const requesterId = req.user?.userID;
+        const requesterId =req.user.userID || req.user._id;
 
         if (!discussionId || !requesterId) {
             return res.status(400).json({ msg: "Missing required fields." });
@@ -222,7 +237,7 @@ export const requestToJoinDiscussion = async (req, res) => {
         }
 
         const isMember = discussion.joinedMembers.some(
-            (m) => m.username.toString() === requesterId.toString()
+            (m) => m.toString() === requesterId.toString()
         );
         if (isMember) {
             return res
@@ -231,7 +246,7 @@ export const requestToJoinDiscussion = async (req, res) => {
         }
 
         const alreadyRequested = discussion.pendingRequests.some(
-            (r) => r.username.toString() === requesterId.toString()
+            (r) => r.toString() === requesterId.toString()
         );
         if (alreadyRequested) {
             return res
@@ -241,7 +256,7 @@ export const requestToJoinDiscussion = async (req, res) => {
                 });
         }
 
-        discussion.pendingRequests.push({ username: requesterId });
+        discussion.pendingRequests.push( requesterId );
         await discussion.save();
 
         return res
@@ -258,7 +273,7 @@ export const requestToJoinDiscussion = async (req, res) => {
 export const acceptUserInDiscussion = async (req, res) => {
     try {
         const { discussionId, userId } = req.body;
-        const adminId = req.user.userID;
+        const adminId = req.user.userID || req.user._id;
 
         if (!discussionId || !userId)
             return res.status(400).json({ msg: "Missing required fields" });
@@ -299,7 +314,7 @@ export const acceptUserInDiscussion = async (req, res) => {
 export const leaveDiscussion = async (req, res) => {
     try {
         const { discussionId } = req.body;
-        const userId = req.user?.userID;
+        const userId = req.user.userID || req.user._id;
 
         if (!discussionId || !userId) {
             return res.status(400).json({ msg: "Missing required fields." });
@@ -311,7 +326,7 @@ export const leaveDiscussion = async (req, res) => {
         }
 
         const isMember = discussion.joinedMembers.some(
-            (m) => m.username.toString() === userId.toString()
+            (m) => m.toString() === userId.toString()
         );
         if (!isMember) {
             return res
@@ -324,11 +339,11 @@ export const leaveDiscussion = async (req, res) => {
                 .json({ msg: "Only admins can accept users" });
 
         discussion.joinedMembers = discussion.joinedMembers.filter(
-            (m) => m.username.toString() !== userId.toString()
+            (m) => m.toString() !== userId.toString()
         );
 
         discussion.admins = discussion.admins.filter(
-            (a) => a.username.toString() !== userId.toString()
+            (a) => a.toString() !== userId.toString()
         );
 
         await discussion.save();
@@ -347,7 +362,7 @@ export const leaveDiscussion = async (req, res) => {
 export const rejectJoinRequest = async (req, res) => {
     try {
         const { discussionId, userId } = req.body;
-        const adminId = req.user?.userID;
+        const adminId =  req.user.userID || req.user._id;
 
         if (!discussionId || !userId || !adminId) {
             return res.status(400).json({ msg: "Missing required fields." });
@@ -360,7 +375,7 @@ export const rejectJoinRequest = async (req, res) => {
 
         const isAdmin =
             discussion.admins.some(
-                (a) => a.username.toString() === adminId.toString()
+                (a) => a.toString() === adminId.toString()
             ) || discussion.createdBy.toString() === adminId.toString();
 
         if (!isAdmin) {
@@ -370,7 +385,7 @@ export const rejectJoinRequest = async (req, res) => {
         }
 
         const requestIndex = discussion.pendingRequests.findIndex(
-            (r) => r.username.toString() === userId.toString()
+            (r) => r.toString() === userId.toString()
         );
         if (requestIndex === -1) {
             return res
@@ -391,3 +406,7 @@ export const rejectJoinRequest = async (req, res) => {
             .json({ msg: "Internal server error.", error: error.message });
     }
 };
+
+
+
+// all tested now just left to implement on frontend
