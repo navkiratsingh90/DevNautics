@@ -25,8 +25,12 @@ const projectCollabSchema = new mongoose.Schema({
 	problemStatement : {
 		type : String,
 	},
+	Category : {
+		type: String,
+		required : true
+	},
 	futureScope : {
-		type : String,
+		type : String
 	},
 	rolesLookingFor : {
 		type : [String],
@@ -41,22 +45,21 @@ const projectCollabSchema = new mongoose.Schema({
 		required : true,
 	},
 	currentTeamMembers: {
-		type : [
-		{
-			user: {
-				type: mongoose.Schema.Types.ObjectId,
-				ref: "User",
-				required: true
-			},
-			roleAssigned: {
-				type: String,
-				required: true
+		type: [
+			{
+				user: {
+					type: mongoose.Schema.Types.ObjectId,
+					ref: "User",
+					required: true
+				},
+				roleAssigned: {
+					type: String,
+					required: true
+				}
 			}
-		}
-	],
-	default : []
-}
-,	
+		],
+		default: []
+	},	
 	createdBy : {
 		type : mongoose.Schema.Types.ObjectId,
 		ref : "User"

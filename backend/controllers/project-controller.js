@@ -1,196 +1,257 @@
 import ProjectCollab from "../models/collabspace-model.js";
 import requestCollabModel from "../models/requestCollab-model.js";
+import Users from '../models/user-model.js'
 // import requestCollab from "../models/requestCollab-model.js";
 
 export const createNewProjectCollaboration = async (req, res) => {
     try {
-        const {
-            title,
-            description,
-            status,
-            problemStatement,
-            rolesLookingFor,
-            techStackUsed,
-            totalTeamSize,
-            currentTeamMembers,
-        } = req.body;
-        if (
-            !title ||
-            !description ||
-            !status ||
-            !problemStatement ||
-            !rolesLookingFor ||
-            !techStackUsed ||
-            !totalTeamSize
-        ) {
-            res.status(400).send({ msg: "invalid Credentials!" });
+      const {
+        title,
+        description,
+        status,
+        problemStatement,
+        rolesLookingFor,
+        techStackUsed,
+        Category,
+        totalTeamSize,
+        currentTeamMembers = [],
+      } = req.body;
+  
+      if (
+        !title ||
+        !description ||
+        !status ||
+        !problemStatement ||
+        !rolesLookingFor ||
+        !techStackUsed ||
+        !totalTeamSize
+      ) {
+        return res.status(400).json({ msg: "Invalid credentials" });
+      }
+  
+      const userId = req.user.userID || req.user._id;
+  
+      // 1️⃣ Fetch users
+      const users = await Users.find({}, { username: 1 });
+      const userMap = new Map();
+  
+      users.forEach(user => {
+        userMap.set(user.username.toLowerCase(), user._id);
+      });
+  
+      // 2️⃣ Convert usernames → ObjectIds
+      const convertedMembers = [];
+  
+      for (let member of currentTeamMembers) {
+        if (!member.username || !member.roleAssigned) {
+          return res.status(400).json({
+            message: "Each member must have username and roleAssigned"
+          });
         }
-        const userId = req.user.userID || req.user._id;
-        for (let member of currentTeamMembers) {
-            if (!member.user || !member.roleAssigned) {
-                return res.status(400).json({
-                    message:
-                        "Each team member must have 'user' and 'roleAssigned' fields",
-                });
-            }
+  
+        const userObjectId = userMap.get(member.username.toLowerCase());
+  
+        if (!userObjectId) {
+          return res.status(404).json({
+            message: `User not found with username ${member.username}`
+          });
         }
-        if (currentTeamMembers.length > totalTeamSize) {
-            return res.status(400).json({
-                message: "Team size exceeds totalTeamSize of the project",
-            });
-        }
-        const exists = currentTeamMembers.some(
-            member => member.user.toString() === userId.toString()
-        );
-        
-        if (!exists) {
-            currentTeamMembers.push({
-                user: userId,
-                roleAssigned: "Project Owner" // or any role
-            });
-        }
-        
-        const newProject = new ProjectCollab({
-            title,
-            description,
-            status,
-            problemStatement,
-            rolesLookingFor,
-            techStackUsed,
-            totalTeamSize,
-            currentTeamMembers,
-            createdBy: userId,
+  
+        convertedMembers.push({
+          user: userObjectId,
+          roleAssigned: member.roleAssigned
         });
-
-        await newProject.save();
-
-        res.status(201).json({
-            message: "Project collaboration created successfully",
-            project: newProject,
+      }
+  
+      // 3️⃣ Team size validation
+      if (convertedMembers.length > totalTeamSize) {
+        return res.status(400).json({
+          message: "Team size exceeds totalTeamSize"
         });
+      }
+  
+      // 4️⃣ Ensure project owner exists
+      const ownerExists = convertedMembers.some(
+        m => m.user.toString() === userId.toString()
+      );
+  
+      if (!ownerExists) {
+        convertedMembers.push({
+          user: userId,
+          roleAssigned: "Project Owner"
+        });
+      }
+  
+      // 5️⃣ Create project
+      const newProject = new ProjectCollab({
+        title,
+        description,
+        status,
+        problemStatement,
+        Category,
+        rolesLookingFor,
+        techStackUsed,
+        totalTeamSize,
+        currentTeamMembers: convertedMembers,
+        createdBy: userId,
+      });
+  
+      await newProject.save();
+  
+      res.status(201).json({
+        message: "Project collaboration created successfully",
+        project: newProject,
+      });
+  
     } catch (error) {
-        console.error(error);
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
     }
-};
-
-export const updateCurrentProject = async (req, res) => {
+  };
+  
+  export const updateCurrentProject = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { description, status, rolesLookingFor, currentTeamMembers } =
-            req.body;
-            const userId = req.user.userID || req.user._id;
-        const project = await ProjectCollab.findById(id);
-        if (!project) {
-            return res.status(404).json({ message: "Project not found" });
+      const { id } = req.params;
+      const { description, status, rolesLookingFor, currentTeamMembers } = req.body;
+      const userId = req.user.userID || req.user._id;
+  
+      const project = await ProjectCollab.findById(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+  
+      if (project.createdBy.toString() !== userId.toString()) {
+        return res.status(403).json({ message: "You are not the owner of this project" });
+      }
+  
+      /* ---------------- TEAM MEMBERS TOGGLE ---------------- */
+      if (currentTeamMembers && currentTeamMembers.length > 0) {
+        const users = await Users.find({}, "username _id");
+  
+        const userMap = new Map();
+        users.forEach((u) => userMap.set(u.username, u._id));
+  
+        // Convert username → ObjectId
+        for (let member of currentTeamMembers) {
+          if (!userMap.has(member.username)) {
+            return res.status(404).json({
+              message: `User not found with username ${member.username}`
+            });
+          }
+  
+          member.user = userMap.get(member.username);
+          delete member.username;
         }
-        if (project.createdBy.toString() != userId) return res.status(404).json({ message: "you're not owner of the post" });
-        if (currentTeamMembers) {
-            for (let member of currentTeamMembers) {
-                const existingMember = project.currentTeamMembers.some(
-                    (m) => member.user.toString() === m.user.toString()
-                );
-
-                if (existingMember) {
-                    return res
-                        .status(400)
-                        .json({ msg: "User already exists in this team" });
-                }
-            }
-
-            const userIds = currentTeamMembers.map((m) => m.user.toString());
-            const hasDuplicates = new Set(userIds).size !== userIds.length;
-            if (hasDuplicates) {
-                return res.status(400).json({
-                    message: "Duplicate users found in currentTeamMembers",
-                });
-            }
-
-            if (currentTeamMembers.length > project.totalTeamSize) {
-                return res.status(400).json({
-                    message: "Team size exceeds totalTeamSize of the project",
-                });
-            }
+  
+        // Remove duplicates inside request
+        const userIds = currentTeamMembers.map((m) => m.user.toString());
+        if (new Set(userIds).size !== userIds.length) {
+          return res.status(400).json({
+            message: "Duplicate users found in request"
+          });
         }
-
-        if (description) project.description = description;
-        if (status) project.status = status;
-        if (rolesLookingFor) {
-            for (let roles of rolesLookingFor) {
-                project.rolesLookingFor.push(roles);
+  
+        // Toggle logic
+        for (let member of currentTeamMembers) {
+  
+          const idx = project.currentTeamMembers.findIndex(
+            (m) => m.user.toString() === member.user.toString()
+          );
+  
+          if (idx !== -1) {
+            // ✅ USER EXISTS → REMOVE (Toggle OFF)
+            project.currentTeamMembers.splice(idx, 1);
+          } else {
+            // ✅ USER DOES NOT EXIST → ADD (Toggle ON)
+  
+            if (project.currentTeamMembers.length >= project.totalTeamSize) {
+              return res.status(400).json({
+                message: "Team size exceeds project limit"
+              });
             }
+  
+            project.currentTeamMembers.push(member);
+          }
         }
-        if (currentTeamMembers) {
-            for (let members of currentTeamMembers) {
-                project.currentTeamMembers.push(members);
-            }
-        }
-
-        // 5️⃣ Save updated project
-        const updatedProject = await project.save();
-
-        res.status(200).json({
-            message: "Project updated successfully",
-            project: updatedProject,
-        });
+      }
+  
+      /* ---------------- BASIC UPDATES ---------------- */
+      if (description) project.description = description;
+      if (status) project.status = status;
+  
+      if (rolesLookingFor && rolesLookingFor.length > 0) {
+        const uniqueRoles = new Set([
+          ...project.rolesLookingFor,
+          ...rolesLookingFor
+        ]);
+        project.rolesLookingFor = Array.from(uniqueRoles);
+      }
+  
+      const updatedProject = await project.save();
+  
+      res.status(200).json({
+        message: "Project updated successfully",
+        project: updatedProject
+      });
+  
     } catch (error) {
-        console.error("Error updating project:", error);
-        res.status(500).json({
-            message: "Internal server error while updating project",
-            error: error.message,
-        });
+      console.error("Error updating project:", error);
+      res.status(500).json({
+        message: "Internal server error",
+        error: error.message
+      });
     }
-};
+  };
+  
+  
 
 export const getAllProjects = async (req, res) => {
     try {
-        const { filters = {}, sort = "createdAt", order = "desc" } = req.body;
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-        const query = {};
-
-        Object.keys(filters).forEach((key) => {
-            if (Array.isArray(filters[key]) && filters[key].length > 0) {
-                query[key] = { $in: filters[key] };
-            } else if (filters[key]) {
-                query[key] = filters[key];
-            }
-        });
-
-        const sortOrder = order === "asc" ? 1 : -1;
-        const sortObj = { [sort]: sortOrder };
-
-        // Query DB
-        const projects = await ProjectCollab.find(query)
-            .sort(sortObj)
-            .skip(skip)
-            .limit(limit)
-            .populate("createdBy", "username email profilePic")
-            .populate("currentTeamMembers.user", "username email profilePic");
-
-        // Pagination info
-        const totalProjects = await ProjectCollab.countDocuments(query);
-        const totalPages = Math.ceil(totalProjects / limit);
-
-        res.status(200).json({
-            message: "Projects retrieved successfully",
-            data: projects,
-            pagination: {
-                totalProjects,
-                totalPages,
-                currentPage: page,
-                pageSize: limit,
-            },
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            message: "Internal server error",
-            error: error.message,
-        });
+      const { filters = {}, sort = "createdAt", order = "desc" } = req.body;
+  
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+  
+      const query = {};
+  
+      Object.keys(filters).forEach((key) => {
+        if (Array.isArray(filters[key]) && filters[key].length > 0) {
+          query[key] = { $in: filters[key] };
+        } else if (filters[key]) {
+          query[key] = filters[key];
+        }
+      });
+  
+      const sortOrder = order === "asc" ? 1 : -1;
+  
+      const projects = await ProjectCollab.find(query)
+        .sort({ [sort]: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .populate("createdBy", "username email profilePic")
+        .populate("currentTeamMembers.user", "username email profilePic");
+  
+      const totalProjects = await ProjectCollab.countDocuments(query);
+  
+      res.status(200).json({
+        success: true,
+        data: projects,
+        pagination: {
+          totalProjects,
+          totalPages: Math.ceil(totalProjects / limit),
+          currentPage: page,
+          pageSize: limit,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
     }
-};
+  };
+  
 
 export const getProjectById = async (req, res) => {
     try {

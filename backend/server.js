@@ -20,8 +20,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
-    credentials: true,
+    origin: "http://localhost:5173", // frontend URL
+    credentials: true,               // ⭐ REQUIRED
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -30,13 +32,14 @@ import activityRouter from './routes/activity-router.js'
 import authRouter from './routes/auth-router.js'
 import userRouter from './routes/user-router.js'
 import discussionRouter from './routes/discussion-router.js'
-import collabSpaceRouter from './routes/projectCollab-router.js'
+// import collabSpaceRouter from './routes/projectCollab-router.js'
+import projectCollabRouter from './routes/projectCollab-router.js'
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter)
 app.use("/api/activity", activityRouter)
 app.use("/api/discussion", discussionRouter);
-app.use("/api/collab", collabSpaceRouter)
+app.use("/api/collab", projectCollabRouter)
 
 // ✅ Serve React frontend build (for production)
 // app.use(express.static(path.join(__dirname, "/frontend/dist")));

@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router';
+import { getProjectById, updateProject } from '../../services/collabApis';
 
 const ProjectCollaboration = () => {
+  const {id} = useParams()
   const [darkMode, setDarkMode] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [showAddTeammateForm, setShowAddTeammateForm] = useState(false);
@@ -14,9 +17,10 @@ const ProjectCollaboration = () => {
   });
   const [teammateData, setTeammateData] = useState({
     username: '',
-    role: ''
+    roleAssigned: ''
   });
-
+  const [roles,setRoles] = useState([])
+  const [data,setData] = useState(null)
   const projectData = {
     id: 1,
     title: "AI Code Assistant",
@@ -94,21 +98,32 @@ const ProjectCollaboration = () => {
     }));
   };
 
-  const handleAddTeammateSubmit = (e) => {
+  const handleAddTeammateSubmit = async (e) => {
     e.preventDefault();
-    console.log('New Teammate Data:', teammateData);
-    // Here you would typically send the data to your backend
-    alert(`Team member ${teammateData.username} added successfully as ${teammateData.role}!`);
+    const res = await updateProject(teammateData)
+    console.log(res);
     setShowAddTeammateForm(false);
     setTeammateData({
       username: '',
-      role: ''
+      roleAssigned: ''
     });
   };
-
+  const fetchProject = async () => {
+    try {
+        const res = await getProjectById(id)
+        console.log(res.data.data);
+        setData(res.data.data)
+        setRoles(res.data.data.rolesLookingFor)
+    } catch (error) {
+        console.error(error);
+    }
+  }
+  useEffect(() => {
+    fetchProject()
+  },[])
   const ApplyCollaboratorForm = () => {
     if (!showApplyForm) return null;
-
+    if (!data) return <div>Loading...</div>
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'} max-h-[90vh] overflow-hidden flex flex-col`}>
@@ -363,8 +378,8 @@ const ProjectCollaboration = () => {
                 Role *
               </label>
               <select
-                name="role"
-                value={teammateData.role}
+                name="roleAssigned"
+                value={teammateData.roleAssigned}
                 onChange={handleTeammateInputChange}
                 required
                 className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
@@ -374,7 +389,7 @@ const ProjectCollaboration = () => {
                 }`}
               >
                 <option value="">Select a role</option>
-                {availableRoles.map((role, index) => (
+                {roles.map((role, index) => (
                   <option 
                     key={index} 
                     value={role}
@@ -424,25 +439,26 @@ const ProjectCollaboration = () => {
                 Cancel
               </button>
               <button
-                type="submit"
-                disabled={!teammateData.username || !teammateData.role}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
-                  !teammateData.username || !teammateData.role
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : darkMode 
-                      ? 'bg-blue-600 hover:bg-blue-700' 
-                      : 'bg-blue-500 hover:bg-blue-600'
-                }`}
-              >
-                Add to Team
-              </button>
+              type="submit"
+              disabled={!teammateData.username || !teammateData.role}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+                !teammateData.username || !teammateData.role
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : darkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              Add to Team
+            </button>
+
             </div>
           </form>
         </div>
       </div>
     );
   };
-
+  if (!data) return <div>Loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} ${darkMode ? 'text-white' : 'text-gray-800'}`}>
       {/* Header with Theme Toggle */}
@@ -466,7 +482,7 @@ const ProjectCollaboration = () => {
         {/* Project Image */}
         <div className="rounded-2xl overflow-hidden shadow-2xl mb-8">
           <img 
-            src={projectData.imageUrl} 
+            src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
             alt="AI Code Assistant" 
             className="w-full h-64 object-cover"
           />
@@ -479,11 +495,11 @@ const ProjectCollaboration = () => {
             {/* Title and Category */}
             <div>
               <div className="flex items-center gap-4 mb-4">
-                <h1 className="text-4xl font-bold">{projectData.title}</h1>
+                <h1 className="text-4xl font-bold">{data.title}</h1>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                   darkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'
                 }`}>
-                  {projectData.category}
+                  {data.Category}
                 </span>
               </div>
               
@@ -494,7 +510,7 @@ const ProjectCollaboration = () => {
                   : (darkMode ? 'bg-gray-700' : 'bg-gray-200')
               }`}>
                 <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
-                {projectData.status}
+                {data.status}
               </div>
             </div>
 
@@ -504,7 +520,7 @@ const ProjectCollaboration = () => {
               <p className={`text-lg leading-relaxed ${
                 darkMode ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                {projectData.description}
+                {data.description}
               </p>
             </section>
 
@@ -515,7 +531,7 @@ const ProjectCollaboration = () => {
                 darkMode ? 'bg-gray-800' : 'bg-white'
               } shadow-lg`}>
                 <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>
-                  {projectData.problemStatement}
+                  {data.problemStatement}
                 </p>
               </div>
             </section>
@@ -528,7 +544,7 @@ const ProjectCollaboration = () => {
               <div className="mb-6">
                 <h3 className="text-xl font-medium mb-3">Technology Stack</h3>
                 <div className="flex flex-wrap gap-2">
-                  {projectData.techStack.map((tech, index) => (
+                  {data.techStackUsed.map((tech, index) => (
                     <span 
                       key={index}
                       className={`px-3 py-2 rounded-lg font-medium ${
@@ -547,7 +563,7 @@ const ProjectCollaboration = () => {
               <div>
                 <h3 className="text-xl font-medium mb-3">Roles We're Looking For</h3>
                 <div className="space-y-3">
-                  {projectData.requirements.map((role, index) => (
+                  {data.rolesLookingFor.map((role, index) => (
                     <div 
                       key={index}
                       className={`p-4 rounded-lg flex items-center justify-between ${
@@ -580,29 +596,41 @@ const ProjectCollaboration = () => {
                   darkMode ? 'bg-gray-700' : 'bg-gray-50'
                 }`}>
                   <span className="text-sm opacity-75">Total Team Size</span>
-                  <div className="text-2xl font-bold text-blue-500">{projectData.totalMembers} members</div>
+                  <div className="text-2xl font-bold text-blue-500">{data.currentTeamMembers.length} members</div>
                 </div>
               </div>
 
               <h3 className="text-xl font-medium mb-3">Current Team Members</h3>
               <div className="space-y-4">
-                {projectData.currentTeamMembers.map((member, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                      darkMode ? 'bg-blue-900' : 'bg-blue-100'
-                    }`}>
-                      {member.avatar.charAt(0).toUpperCase()}
+              {data.currentTeamMembers.map((member) => (
+                <div
+                  key={member._id}
+                  className="flex items-center space-x-4"
+                >
+                  {/* Avatar */}
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                      darkMode ? "bg-blue-900" : "bg-blue-100"
+                    }`}
+                  >
+                    {member.user.username.slice(0, 2).toUpperCase()}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1">
+                    <div className="font-semibold">
+                      {member.user.username}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{member.username}</div>
-                      <div className={`text-sm ${
-                        darkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        {member.role}
-                      </div>
+                    <div
+                      className={`text-sm ${
+                        darkMode ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      {member.roleAssigned}
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
               </div>
             </section>
 
@@ -615,10 +643,10 @@ const ProjectCollaboration = () => {
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-xl ${
                   darkMode ? 'bg-green-900' : 'bg-green-100'
                 }`}>
-                  {projectData.postedBy.charAt(0).toUpperCase()}
+                  {data.createdBy.username.toString().charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-semibold text-lg">{projectData.postedBy}</div>
+                  <div className="font-semibold text-lg">{data.createdBy.username}</div>
                   <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     Project Lead
                   </div>
@@ -628,16 +656,16 @@ const ProjectCollaboration = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Posted:</span>
-                  <span>{projectData.datePosted}</span>
+                  <span>{data.createdAt.toString().slice(0,10)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Last Updated:</span>
-                  <span>{projectData.lastUpdated}</span>
+                  <span>{data.updatedAt.toString().slice(0,10)}</span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span>Contact:</span>
                   <span className="text-blue-400">{projectData.contact}</span>
-                </div>
+                </div> */}
               </div>
             </section>
 

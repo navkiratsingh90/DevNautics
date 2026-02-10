@@ -27,10 +27,8 @@ router.post(
 );
 
 // Get all projects (with filters, sort, pagination)
-router.get(
-    "/get",
-    getAllProjects
-);
+router.post("/get", getAllProjects);
+
 
 // Get project by ID
 router.get(

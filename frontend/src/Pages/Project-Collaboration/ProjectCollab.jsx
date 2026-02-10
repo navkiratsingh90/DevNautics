@@ -7,88 +7,7 @@ const ProjectCollabPage = () => {
   const darkMode = useSelector(state => state.Theme.darkMode);
   const [selectedProject, setSelectedProject] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      title: "AI Code Assistant",
-      description: "An intelligent code completion tool that uses machine learning to suggest code snippets and detect bugs in real-time. The project aims to help developers write better code faster.",
-      problemStatement: "Developers often waste time on repetitive coding tasks and debugging. This tool will automate code suggestions and error detection.",
-      category: "AI/ML",
-      techStack: ["Python", "TensorFlow", "React", "Node.js", "MongoDB"],
-      status: "Looking for team members",
-      requirements: ["ML Engineer", "Frontend Dev", "Backend Dev"],
-      membersNeeded: 3,
-      currentTeamMembers: [
-        { name: "Alex Chen", email: "alex@example.com", role: "Project Lead", avatar: "alex" },
-        { name: "Sarah Kim", email: "sarah@example.com", role: "UI/UX Designer", avatar: "sarah" }
-      ],
-      postedBy: "Alex Chen",
-      datePosted: "2024-01-15",
-      lastUpdated: "2024-01-20",
-      contact: "alex@example.com",
-      imageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      id: 2,
-      title: "Decentralized Voting System",
-      description: "A blockchain-based voting platform that ensures transparency and security in electoral processes using smart contracts.",
-      problemStatement: "Traditional voting systems lack transparency and are vulnerable to fraud. Blockchain can provide immutable, transparent records.",
-      category: "Blockchain",
-      techStack: ["Solidity", "Web3.js", "React", "Ethereum", "IPFS"],
-      status: "In progress",
-      requirements: ["Blockchain Dev", "Frontend Dev", "Security Expert"],
-      membersNeeded: 2,
-      currentTeamMembers: [
-        { name: "Mike Ross", email: "mike@example.com", role: "Blockchain Lead", avatar: "mike" },
-        { name: "Emma Watson", email: "emma@example.com", role: "Frontend Dev", avatar: "emma" }
-      ],
-      postedBy: "Mike Ross",
-      datePosted: "2024-01-10",
-      lastUpdated: "2024-01-18",
-      contact: "mike@example.com",
-      imageUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      id: 3,
-      title: "Smart Home IoT Hub",
-      description: "A centralized IoT hub that connects and manages all smart home devices with advanced automation and energy optimization features.",
-      problemStatement: "Smart home devices often work in silos. This hub will unify control and enable cross-device automation.",
-      category: "IoT",
-      techStack: ["C++", "Python", "React Native", "AWS IoT", "MQTT"],
-      status: "Looking for team members",
-      requirements: ["IoT Engineer", "Mobile Dev", "Backend Dev", "Hardware Engineer"],
-      membersNeeded: 4,
-      currentTeamMembers: [
-        { name: "David Lee", email: "david@example.com", role: "IoT Specialist", avatar: "david" }
-      ],
-      postedBy: "David Lee",
-      datePosted: "2024-01-22",
-      lastUpdated: "2024-01-22",
-      contact: "david@example.com",
-      imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-    },
-    {
-      id: 4,
-      title: "Health Fitness Tracker Pro",
-      description: "A comprehensive mobile app that tracks fitness metrics, provides personalized workout plans, and integrates with wearable devices.",
-      problemStatement: "Existing fitness apps lack personalized AI-driven recommendations and seamless wearable integration.",
-      category: "App Dev",
-      techStack: ["React Native", "Firebase", "Node.js", "Python", "TensorFlow Lite"],
-      status: "Completed",
-      requirements: ["Mobile Dev", "Backend Dev", "ML Engineer", "UI/UX Designer"],
-      membersNeeded: 0,
-      currentTeamMembers: [
-        { name: "Lisa Wang", email: "lisa@example.com", role: "Lead Developer", avatar: "lisa" },
-        { name: "Tom Brown", email: "tom@example.com", role: "ML Engineer", avatar: "tom" },
-        { name: "Maria Garcia", email: "maria@example.com", role: "Mobile Dev", avatar: "maria" }
-      ],
-      postedBy: "Lisa Wang",
-      datePosted: "2024-01-05",
-      lastUpdated: "2024-01-25",
-      contact: "lisa@example.com",
-      imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-    }
-  ]);
+  const [data,setData] = useState(null)
 
   // Filter and sort states
   const [filters, setFilters] = useState({
@@ -105,59 +24,14 @@ const ProjectCollabPage = () => {
     description: "",
     problemStatement: "",
     category: "AI/ML",
-    techStack: "",
+    techStackUsed: "",
     status: "Looking for team members",
     requirements: "",
-    membersNeeded: "",
-    postedBy: "",
+    totalTeamSize: "",
+    createdBy: "",
     contact: "",
     imageUrl: ""
   });
-
-  // Filter and sort projects
-  const filteredAndSortedProjects = projects
-    .filter(project => {
-      // Category filter
-      if (filters.category !== "all" && project.category !== filters.category) {
-        return false;
-      }
-      
-      // Status filter
-      if (filters.status !== "all" && project.status !== filters.status) {
-        return false;
-      }
-      
-      // Requirements filter
-      if (filters.requirements !== "all" && !project.requirements.includes(filters.requirements)) {
-        return false;
-      }
-      
-      // Search query filter
-      if (filters.searchQuery && 
-          !project.title.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
-          !project.description.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
-          !project.techStack.some(tech => tech.toLowerCase().includes(filters.searchQuery.toLowerCase()))) {
-        return false;
-      }
-      
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "dateNewest":
-          return new Date(b.datePosted) - new Date(a.datePosted);
-        case "dateOldest":
-          return new Date(a.datePosted) - new Date(b.datePosted);
-        case "titleAZ":
-          return a.title.localeCompare(b.title);
-        case "titleZA":
-          return b.title.localeCompare(a.title);
-        case "membersNeeded":
-          return b.membersNeeded - a.membersNeeded;
-        default:
-          return 0;
-      }
-    });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -187,7 +61,7 @@ const ProjectCollabPage = () => {
       imageUrl: newProject.imageUrl || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
     };
     
-    setProjects([project, ...projects]);
+    // setProjects([project, ...projects]);
     setShowCreateModal(false);
     setNewProject({
       title: "",
@@ -204,21 +78,13 @@ const ProjectCollabPage = () => {
     });
   };
 
-  const handleDeleteProject = (projectId, e) => {
-    e?.stopPropagation();
-    if (window.confirm("Are you sure you want to delete this project?")) {
-      setProjects(projects.filter(project => project.id !== projectId));
-      if (selectedProject && selectedProject.id === projectId) {
-        setSelectedProject(null);
-      }
-    }
-  };
-
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
       ...prev,
       [filterType]: value
     }));
+    console.log(filters);
+    fetchProjects()
   };
 
   const clearAllFilters = () => {
@@ -231,23 +97,23 @@ const ProjectCollabPage = () => {
     setSortBy("dateNewest");
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  // const formatDate = (dateString) => {
+  //   return new Date(dateString).toLocaleDateString('en-US', {
+  //     weekday: 'long',
+  //     year: 'numeric',
+  //     month: 'long',
+  //     day: 'numeric'
+  //   });
+  // };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      "Looking for team members": "bg-green-500",
-      "In progress": "bg-blue-500",
-      "Completed": "bg-gray-500"
-    };
-    return colors[status] || "bg-gray-500";
-  };
+  // const getStatusColor = (status) => {
+  //   const colors = {
+  //     "Looking for team members": "bg-green-500",
+  //     "In progress": "bg-blue-500",
+  //     "Completed": "bg-gray-500"
+  //   };
+  //   return colors[status] || "bg-gray-500";
+  // };
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -259,20 +125,44 @@ const ProjectCollabPage = () => {
     };
     return colors[category] || "bg-gray-500";
   };
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await getAllProjects({});
-        console.log(res.data);
-      } catch (err) {
-        console.error(err.response?.data || err.message);
+  const buildFilters = (filters) => {
+    const cleaned = {};
+  
+    Object.entries(filters).forEach(([key, value]) => {
+      if (
+        value !== "all" &&
+        value !== "" &&
+        value !== null &&
+        value !== undefined
+      ) {
+        cleaned[key] = value;
       }
-    };
+    });
+  
+    return cleaned;
+  };
+  const fetchProjects = async () => {
+    try {
+      const res = await getAllProjects({
+        page: 1,
+        limit: 10,
+        filters: buildFilters(filters),
+        sort: "createdAt",
+        order: "desc",
+      });
+      
+      // console.log(res.data.data);
+      setData(res.data.data)
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+    }
+  };
+  useEffect(() => {
   
     fetchProjects();
   }, []);
   
-  
+  if (!data) return <div>Loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -432,7 +322,7 @@ const ProjectCollabPage = () => {
 
                 {/* Results Count */}
                 <div className={`mt-4 pt-4 border-t border-gray-700 text-center ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <div className="text-2xl font-bold text-blue-500">{filteredAndSortedProjects.length}</div>
+                  <div className="text-2xl font-bold text-blue-500">{data.length}</div>
                   <div className="text-sm">projects found</div>
                 </div>
               </div>
@@ -443,9 +333,9 @@ const ProjectCollabPage = () => {
           <div className="flex-1 min-w-0">
             {/* Projects List - Horizontal Layout */}
             <div className="space-y-6">
-              {filteredAndSortedProjects.map(project => (
+              {data.map(project => (
                 <div 
-                  key={project.id}
+                  key={project._id}
                   onClick={() => setSelectedProject(project)}
                   className={`rounded-2xl shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-[1.02] ${
                     darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-white hover:bg-gray-50'
@@ -456,8 +346,8 @@ const ProjectCollabPage = () => {
                       {/* Project Image */}
                       <div className="flex-shrink-0 w-48 h-32">
                         <img 
-                          src={project.imageUrl} 
-                          alt={project.title}
+                          src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                          // alt={project.title}
                           className="w-full h-full object-cover rounded-lg"
                         />
                       </div>
@@ -469,7 +359,7 @@ const ProjectCollabPage = () => {
                           <div className="text-right">
                             
                             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Posted {formatDate(project.datePosted)}
+                              Posted {project.createdAt.toString().slice(0,11)}
                             </div>
                           </div>
                         </div>
@@ -488,7 +378,7 @@ const ProjectCollabPage = () => {
                           <div>
                             <h4 className={`text-sm font-semibold mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Roles Needed</h4>
                             <div className="flex flex-wrap gap-1">
-                              {project.requirements.map((req, index) => (
+                              {project.rolesLookingFor.map((req, index) => (
                                 <span 
                                   key={index}
                                   className={`px-2 py-1 rounded text-xs ${
@@ -511,10 +401,10 @@ const ProjectCollabPage = () => {
                               </span>
                             </div>
                             <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                              Posted by: {project.postedBy}
+                              Posted by: {project.createdBy.username}
                             </span>
                           </div>
-                          <Link to={`/project-collaboration/${project.id}`}><button
+                          <Link to={`/project-collaboration/${project._id}`}><button
                             onClick={(e) => {
                               e.stopPropagation();
                               // Handle join project logic
@@ -534,7 +424,7 @@ const ProjectCollabPage = () => {
             </div>
 
             {/* Empty State */}
-            {filteredAndSortedProjects.length === 0 && (
+            {data.length === 0 && (
               <div className={`rounded-2xl p-12 text-center ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
                 <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${darkMode ? 'bg-blue-900' : 'bg-blue-100'}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -543,12 +433,12 @@ const ProjectCollabPage = () => {
                 </div>
                 <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>No Projects Found</h2>
                 <p className={`mb-8 max-w-md mx-auto ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {projects.length === 0 
+                  {data.length === 0 
                     ? "There are no projects available at the moment. Be the first to create a project!"
                     : "No projects match your current filters. Try adjusting your search criteria."
                   }
                 </p>
-                {projects.length === 0 ? (
+                {data.length === 0 ? (
                   <button 
                     onClick={() => setShowCreateModal(true)}
                     className={`px-6 py-3 rounded-lg ${darkMode ? 'bg-blue-700 hover:bg-blue-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
@@ -580,9 +470,232 @@ const ProjectCollabPage = () => {
               <p className={`mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Fill in the details for your project</p>
             </div>
             
-            <form onSubmit={handleCreateProject} className="p-6 space-y-4">
-              {/* ... (create project form remains the same) ... */}
+            <form onSubmit={handleCreateProject} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* Project Title */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Project Title
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={newProject.title}
+                    onChange={handleInputChange}
+                    required
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                    placeholder="AI Health Tracker"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Category
+                  </label>
+                  <select
+                    name="category"
+                    value={newProject.category}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  >
+                    <option>AI/ML</option>
+                    <option>Web Dev</option>
+                    <option>Blockchain</option>
+                    <option>IoT</option>
+                    <option>App Dev</option>
+                  </select>
+                </div>
+
+                {/* Tech Stack */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Tech Stack
+                  </label>
+                  <input
+                    type="text"
+                    name="techStack"
+                    value={newProject.techStack}
+                    onChange={handleInputChange}
+                    placeholder="React, Node, MongoDB"
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  />
+                </div>
+
+                {/* Status */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Project Status
+                  </label>
+                  <select
+                    name="status"
+                    value={newProject.status}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  >
+                    <option name = "Open">Open</option>
+                    <option name = "In Progress">In Progress</option>
+                    <option name = "On Hold">On Hold</option>
+                    <option name = "Completed">Completed</option>
+                    <option name = "Closed">Closed</option>
+                  </select>
+                </div>
+
+                {/* Roles Needed */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Roles Needed
+                  </label>
+                  <input
+                    type="text"
+                    name="requirements"
+                    value={newProject.requirements}
+                    onChange={handleInputChange}
+                    placeholder="Frontend Dev, ML Engineer"
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  />
+                </div>
+
+                {/* Members Needed */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Members Needed
+                  </label>
+                  <input
+                    type="number"
+                    name="membersNeeded"
+                    value={newProject.membersNeeded}
+                    onChange={handleInputChange}
+                    min="1"
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  />
+                </div>
+
+                {/* Posted By */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    name="postedBy"
+                    value={newProject.postedBy}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  />
+                </div>
+
+                {/* Contact */}
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Contact (Email / Discord)
+                  </label>
+                  <input
+                    type="text"
+                    name="contact"
+                    value={newProject.contact}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 rounded-lg border ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-800'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Project Description
+                </label>
+                <textarea
+                  name="description"
+                  value={newProject.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-800'
+                  }`}
+                  placeholder="Brief overview of your project"
+                />
+              </div>
+
+              {/* Problem Statement */}
+              <div>
+                <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Problem Statement
+                </label>
+                <textarea
+                  name="problemStatement"
+                  value={newProject.problemStatement}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-800'
+                  }`}
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-4 pt-4 border-t border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className={`px-5 py-2 rounded-lg ${
+                    darkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-800'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`px-6 py-2 rounded-lg font-semibold ${
+                    darkMode
+                      ? 'bg-blue-700 hover:bg-blue-600 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  Create Project
+                </button>
+              </div>
             </form>
+
           </div>
         </div>
       )}
