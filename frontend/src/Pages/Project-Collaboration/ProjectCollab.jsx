@@ -151,7 +151,7 @@ const ProjectCollabPage = () => {
         order: "desc",
       });
       
-      // console.log(res.data.data);
+      console.log(res.data.data);
       setData(res.data.data)
     } catch (err) {
       console.error(err.response?.data || err.message);
@@ -346,7 +346,7 @@ const ProjectCollabPage = () => {
                       {/* Project Image */}
                       <div className="flex-shrink-0 w-48 h-32">
                         <img 
-                          src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                          src={project.file}
                           // alt={project.title}
                           className="w-full h-full object-cover rounded-lg"
                         />

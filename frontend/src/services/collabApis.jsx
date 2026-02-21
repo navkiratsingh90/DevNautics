@@ -41,5 +41,8 @@ export const deleteProject = (projectId) =>
 export const requestCollaboration = (projectId, data) =>
   API.post(`${projectId}/request`, data);
 
+export const addTeammate = (projectId, data) =>
+  API.post(`${projectId}/add-member`, data);
+
 export const acceptApplication = (applicationId) =>
   API.post(`accept/${applicationId}`);

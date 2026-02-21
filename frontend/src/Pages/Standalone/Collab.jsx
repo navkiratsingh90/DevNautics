@@ -1,9 +1,288 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { getProjectById, updateProject } from '../../services/collabApis';
+import { addTeammate, getProjectById, updateProject } from '../../services/collabApis';
+
+// Add this near the other form components (inside ProjectCollaboration, before return)
+const EditProjectForm = ({ 
+  show, 
+  onClose, 
+  darkMode, 
+  projectData, 
+  // onSave ,
+  id
+}) => {
+  const [formData, setFormData] = useState({
+    description: projectData?.description || '',
+    status: projectData?.status || '',
+    rolesLookingFor: ''
+  });
+
+  useEffect(() => {
+    if (projectData) {
+      setFormData({
+        description: projectData.description || '',
+        status: projectData.status || '',
+        rolesLookingFor: ''
+      });
+    }
+  }, [projectData]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit =  async (e) => {
+    e.preventDefault();
+    const res = await updateProject(id,formData)
+    console.log(res);
+    onClose()
+    // onSave(formData);
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        {/* Header */}
+        <div className={`p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Edit Project Requirements</h2>
+            <button
+              onClick={onClose}
+              className={`p-2 rounded-full hover:bg-opacity-20 ${
+                darkMode ? 'hover:bg-white' : 'hover:bg-gray-300'
+              }`}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Description */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Description *
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              rows="4"
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+              placeholder="Describe the project..."
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Status *
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              required
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="">Select status</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+
+          {/* Roles Looking For */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Roles Looking For *
+            </label>
+
+            <input
+              type="text"
+              placeholder="Enter roles separated by commas (e.g. Frontend Developer, Backend Developer)"
+              name= "rolesLookingFor"
+              value={formData.rolesLookingFor}
+              onChange={handleChange}
+              required
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                darkMode
+                  ? 'bg-gray-700 border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+
+            <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Separate roles using commas
+            </p>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold border-2 transition-colors ${
+                darkMode 
+                  ? 'border-gray-600 hover:bg-gray-700' 
+                  : 'border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+                darkMode 
+                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+
+const AddTeammateForm = ({ 
+  show, 
+  onClose, 
+  darkMode, 
+  teammateData, 
+  onInputChange, 
+  onSubmit, 
+  roles 
+}) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        {/* Header */}
+        <div className={`p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Add Team Member</h2>
+            <button
+              onClick={onClose}
+              className={`p-2 rounded-full hover:bg-opacity-20 ${
+                darkMode ? 'hover:bg-white' : 'hover:bg-gray-300'
+              }`}
+            >
+              ✕
+            </button>
+          </div>
+          <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            Add a new member to your project team
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={onSubmit} className="p-6 space-y-6">
+          {/* Username */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Username *
+            </label>
+            <input
+              type="text"
+              name="username"
+              value={teammateData.username}
+              onChange={onInputChange}
+              required
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+              placeholder="Enter team member's username"
+            />
+          </div>
+
+          {/* Role */}
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Role *
+            </label>
+            <select
+              name="role"
+              value={teammateData.role}
+              onChange={onInputChange}
+              required
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="">Select a role</option>
+              {roles.map((role, index) => (
+                <option 
+                  key={index} 
+                  value={role}
+                  className={`py-2 ${darkMode ? 'bg-gray-700' : 'bg-white'}`}
+                >
+                  {role}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold border-2 transition-colors ${
+                darkMode 
+                  ? 'border-gray-600 hover:bg-gray-700' 
+                  : 'border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!teammateData.username || !teammateData.roleAssigned}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+                !teammateData.username || !teammateData.roleAssigned
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : darkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              Add to Team
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- Main Component ---
 
 const ProjectCollaboration = () => {
-  const {id} = useParams()
+  const {id} = useParams();
   const [darkMode, setDarkMode] = useState(false);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [showAddTeammateForm, setShowAddTeammateForm] = useState(false);
@@ -15,34 +294,13 @@ const ProjectCollaboration = () => {
     message: '',
     roles: []
   });
+  const [showEditForm, setShowEditForm] = useState(false);
   const [teammateData, setTeammateData] = useState({
     username: '',
-    roleAssigned: ''
+    role: ''
   });
-  const [roles,setRoles] = useState([])
-  const [data,setData] = useState(null)
-  const projectData = {
-    id: 1,
-    title: "AI Code Assistant",
-    description: "An intelligent code completion tool that uses machine learning to suggest code snippets and detect bugs in real-time. The project aims to help developers write better code faster.",
-    problemStatement: "Developers often waste time on repetitive coding tasks and debugging. This tool will automate code suggestions and error detection.",
-    category: "AI/ML",
-    techStack: ["Python", "TensorFlow", "React", "Node.js", "MongoDB"],
-    status: "Looking for team members",
-    requirements: ["ML Engineer", "Frontend Dev", "Backend Dev"],
-    totalMembers: 10,
-    futureScope: "",
-    currentTeamMembers: [
-      { username: "Alex Chen", role: "Project Lead", avatar: "alex" },
-      { username: "Sarah Kim", role: "UI/UX Designer", avatar: "sarah" }
-    ],
-    postedBy: "Alex Chen",
-    datePosted: "2024-01-15",
-    lastUpdated: "2024-01-20",
-    contact: "alex@example.com",
-    imageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-  };
-
+  const [roles, setRoles] = useState([]);
+  const [data, setData] = useState(null);
   const isLeader = true;
   const availableRoles = ["Frontend Developer", "Backend Developer", "ML Engineer", "UI/UX Designer", "DevOps Engineer", "Product Manager", "QA Engineer", "Data Scientist"];
 
@@ -98,367 +356,50 @@ const ProjectCollaboration = () => {
     }));
   };
 
+  // const handleEditProject = async (updatedData) => {
+  //   try {
+  //     // Call API to update project
+  //     const res = await updateProject({ ...updatedData, id }); // adjust according to your API
+  //     if (res.data.success) {
+  //       // Update local data
+  //       setData(prev => ({ ...prev, ...updatedData }));
+  //       setShowEditForm(false);
+  //       alert('Project updated successfully!');
+  //     }
+  //   } catch (error) {
+  //     console.error('Update failed', error);
+  //     alert('Failed to update project');
+  //   }
+  // };
   const handleAddTeammateSubmit = async (e) => {
     e.preventDefault();
-    const res = await updateProject(teammateData)
+    console.log(teammateData);
+    const res = await  addTeammate(id,teammateData);
     console.log(res);
     setShowAddTeammateForm(false);
     setTeammateData({
       username: '',
-      roleAssigned: ''
+      role: ''
     });
   };
+
   const fetchProject = async () => {
     try {
-        const res = await getProjectById(id)
+        const res = await getProjectById(id);
         console.log(res.data.data);
-        setData(res.data.data)
-        setRoles(res.data.data.rolesLookingFor)
+        setData(res.data.data);
+        setRoles(res.data.data.rolesLookingFor);
     } catch (error) {
         console.error(error);
     }
-  }
+  };
+
   useEffect(() => {
-    fetchProject()
-  },[])
-  const ApplyCollaboratorForm = () => {
-    if (!showApplyForm) return null;
-    if (!data) return <div>Loading...</div>
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'} max-h-[90vh] overflow-hidden flex flex-col`}>
-          {/* Header */}
-          <div className={`p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} flex-shrink-0`}>
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Apply as Collaborator</h2>
-              <button
-                onClick={() => setShowApplyForm(false)}
-                className={`p-2 rounded-full hover:bg-opacity-20 ${
-                  darkMode ? 'hover:bg-white' : 'hover:bg-gray-300'
-                }`}
-              >
-                ✕
-              </button>
-            </div>
-            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Join the {projectData.title} project team
-            </p>
-          </div>
+    fetchProject();
+  }, []);
 
-          {/* Scrollable Form Content */}
-          <div className="flex-1 overflow-y-auto">
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Username and Email */}
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Username *
-                  </label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    required
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      darkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                    placeholder="Enter your username"
-                  />
-                </div>
+  if (!data) return <div>Loading...</div>;
 
-                <div>
-                  <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      darkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
-                        : 'bg-white border-gray-300 text-gray-900'
-                    }`}
-                    placeholder="your@email.com"
-                  />
-                </div>
-              </div>
-
-              {/* GitHub Link */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  GitHub Profile (Optional)
-                </label>
-                <input
-                  type="url"
-                  name="github"
-                  value={formData.github}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  placeholder="https://github.com/yourusername"
-                />
-              </div>
-
-              {/* Roles Applied */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Roles You're Applying For *
-                </label>
-                <select
-                  multiple
-                  value={formData.roles}
-                  onChange={handleRoleChange}
-                  required
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  size="3"
-                >
-                  {projectData.requirements.map((role, index) => (
-                    <option 
-                      key={index} 
-                      value={role}
-                      className={`py-2 ${darkMode ? 'bg-gray-700' : 'bg-white'}`}
-                    >
-                      {role}
-                    </option>
-                  ))}
-                </select>
-                <p className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Hold Ctrl/Cmd to select multiple roles
-                </p>
-              </div>
-
-              {/* Resume Upload */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Resume/CV *
-                </label>
-                <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                  darkMode 
-                    ? 'border-gray-600 hover:border-gray-500' 
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}>
-                  <input
-                    type="file"
-                    onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx"
-                    required
-                    className="hidden"
-                    id="resume-upload"
-                  />
-                  <label 
-                    htmlFor="resume-upload" 
-                    className={`cursor-pointer block ${
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    }`}
-                  >
-                    <div className="text-3xl mb-2">📄</div>
-                    <div className="font-medium text-sm">
-                      {formData.resume ? formData.resume.name : 'Click to upload resume'}
-                    </div>
-                    <div className="text-xs mt-1">
-                      PDF, DOC, DOCX up to 10MB
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Message */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Why do you want to join this project? *
-                </label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  required
-                  rows="3"
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  placeholder="Tell us about your experience, skills, and why you're interested in this project..."
-                />
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowApplyForm(false)}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold border-2 transition-colors ${
-                    darkMode 
-                      ? 'border-gray-600 hover:bg-gray-700' 
-                      : 'border-gray-300 hover:bg-gray-100'
-                  }`}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
-                    darkMode 
-                      ? 'bg-green-600 hover:bg-green-700' 
-                      : 'bg-green-500 hover:bg-green-600'
-                  }`}
-                >
-                  Submit Application
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const AddTeammateForm = () => {
-    if (!showAddTeammateForm) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          {/* Header */}
-          <div className={`p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Add Team Member</h2>
-              <button
-                onClick={() => setShowAddTeammateForm(false)}
-                className={`p-2 rounded-full hover:bg-opacity-20 ${
-                  darkMode ? 'hover:bg-white' : 'hover:bg-gray-300'
-                }`}
-              >
-                ✕
-              </button>
-            </div>
-            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Add a new member to your project team
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleAddTeammateSubmit} className="p-6 space-y-6">
-            {/* Username */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Username *
-              </label>
-              <input
-                type="text"
-                name="username"
-                value={teammateData.username}
-                onChange={handleTeammateInputChange}
-                required
-                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                }`}
-                placeholder="Enter team member's username"
-              />
-            </div>
-
-            {/* Role */}
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Role *
-              </label>
-              <select
-                name="roleAssigned"
-                value={teammateData.roleAssigned}
-                onChange={handleTeammateInputChange}
-                required
-                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'bg-white border-gray-300 text-gray-900'
-                }`}
-              >
-                <option value="">Select a role</option>
-                {roles.map((role, index) => (
-                  <option 
-                    key={index} 
-                    value={role}
-                    className={`py-2 ${darkMode ? 'bg-gray-700' : 'bg-white'}`}
-                  >
-                    {role}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Team Member Preview */}
-            {/* {teammateData.username && teammateData.role && (
-              <div className={`p-4 rounded-lg border-2 ${
-                darkMode ? 'border-blue-600 bg-blue-900 bg-opacity-20' : 'border-blue-400 bg-blue-50'
-              }`}>
-                <h3 className={`font-semibold mb-2 ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>
-                  Team Member Preview
-                </h3>
-                <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    darkMode ? 'bg-blue-800' : 'bg-blue-100'
-                  }`}>
-                    {teammateData.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-medium">{teammateData.username}</div>
-                    <div className={`text-sm ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}>
-                      {teammateData.role}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )} */}
-
-            {/* Form Actions */}
-            <div className="flex gap-4 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowAddTeammateForm(false)}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold border-2 transition-colors ${
-                  darkMode 
-                    ? 'border-gray-600 hover:bg-gray-700' 
-                    : 'border-gray-300 hover:bg-gray-100'
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-              type="submit"
-              disabled={!teammateData.username || !teammateData.role}
-              className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
-                !teammateData.username || !teammateData.role
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : darkMode 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-              }`}
-            >
-              Add to Team
-            </button>
-
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
-  if (!data) return <div>Loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} ${darkMode ? 'text-white' : 'text-gray-800'}`}>
       {/* Header with Theme Toggle */}
@@ -482,7 +423,7 @@ const ProjectCollaboration = () => {
         {/* Project Image */}
         <div className="rounded-2xl overflow-hidden shadow-2xl mb-8">
           <img 
-            src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
+            src={data.file} 
             alt="AI Code Assistant" 
             className="w-full h-64 object-cover"
           />
@@ -505,7 +446,7 @@ const ProjectCollaboration = () => {
               
               {/* Status Badge */}
               <div className={`inline-flex items-center px-4 py-2 rounded-full ${
-                projectData.status === 'Looking for team members' 
+                data.status === 'Looking for team members' 
                   ? (darkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800')
                   : (darkMode ? 'bg-gray-700' : 'bg-gray-200')
               }`}>
@@ -662,10 +603,6 @@ const ProjectCollaboration = () => {
                   <span>Last Updated:</span>
                   <span>{data.updatedAt.toString().slice(0,10)}</span>
                 </div>
-                {/* <div className="flex justify-between">
-                  <span>Contact:</span>
-                  <span className="text-blue-400">{projectData.contact}</span>
-                </div> */}
               </div>
             </section>
 
@@ -686,11 +623,14 @@ const ProjectCollaboration = () => {
                   >
                     ➕ Add Team Members
                   </button>
-                  <button className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                    darkMode 
-                      ? 'bg-yellow-600 hover:bg-yellow-700' 
-                      : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                  }`}>
+                  <button 
+                    onClick={() => setShowEditForm(true)}
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                      darkMode 
+                        ? 'bg-yellow-600 hover:bg-yellow-700' 
+                        : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                    }`}
+                  >
                     ✏️ Modify Requirements
                   </button>
                   <button className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
@@ -731,11 +671,25 @@ const ProjectCollaboration = () => {
         </div>
       </div>
 
-      {/* Apply Collaborator Form Popup */}
-      <ApplyCollaboratorForm />
-
+     
+      <EditProjectForm
+        show={showEditForm}
+        onClose={() => setShowEditForm(false)}
+        darkMode={darkMode}
+        projectData={data}
+        // onSave={handleEditProject}
+        id={id}
+      />
       {/* Add Teammate Form Popup */}
-      <AddTeammateForm />
+      <AddTeammateForm
+        show={showAddTeammateForm}
+        onClose={() => setShowAddTeammateForm(false)}
+        darkMode={darkMode}
+        teammateData={teammateData}
+        onInputChange={handleTeammateInputChange}
+        onSubmit={handleAddTeammateSubmit}
+        roles={roles}
+      />
     </div>
   );
 };

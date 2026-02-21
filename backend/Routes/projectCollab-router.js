@@ -7,9 +7,11 @@ import {
     deleteProjectById,
     requestForCollaboration,
     acceptApplication,
+    addTeammate,
 } from "../controllers/project-controller.js"
 
 import authMiddleware  from "../middlewares/auth-middleware.js";
+import singleUpload from "../middlewares/multer-middleware.js";
 
 const router = express.Router();
 
@@ -23,6 +25,7 @@ const router = express.Router();
 router.post(
     "/create",
     authMiddleware,
+    singleUpload,
     createNewProjectCollaboration
 );
 
@@ -55,6 +58,12 @@ router.post(
     "/:id/request",
     authMiddleware,
     requestForCollaboration
+);
+
+router.post(
+    "/:id/add-member",
+    authMiddleware,
+    addTeammate
 );
 
 // Accept collaboration application

@@ -1,9 +1,13 @@
 import ProjectCollab from "../models/collabspace-model.js";
 import requestCollabModel from "../models/requestCollab-model.js";
+import User from "../models/user-model.js";
 import Users from '../models/user-model.js'
+import cloudinary from '../utils/cloudinary.js'
+import getDataUri from '../utils/datauri.js';
 // import requestCollab from "../models/requestCollab-model.js";
 
 export const createNewProjectCollaboration = async (req, res) => {
+  console.log(req.body);
     try {
       const {
         title,
@@ -16,7 +20,7 @@ export const createNewProjectCollaboration = async (req, res) => {
         totalTeamSize,
         currentTeamMembers = [],
       } = req.body;
-  
+      let fileUrl = null;
       if (
         !title ||
         !description ||
@@ -30,7 +34,11 @@ export const createNewProjectCollaboration = async (req, res) => {
       }
   
       const userId = req.user.userID || req.user._id;
-  
+      if (req.file) {
+        const fileUri = getDataUri(req.file);
+        const uploadRes = await cloudinary.uploader.upload(fileUri.content);
+        fileUrl = uploadRes.secure_url;
+      }
       // 1️⃣ Fetch users
       const users = await Users.find({}, { username: 1 });
       const userMap = new Map();
@@ -87,6 +95,7 @@ export const createNewProjectCollaboration = async (req, res) => {
         title,
         description,
         status,
+        file: fileUrl,
         problemStatement,
         Category,
         rolesLookingFor,
@@ -112,7 +121,7 @@ export const createNewProjectCollaboration = async (req, res) => {
   export const updateCurrentProject = async (req, res) => {
     try {
       const { id } = req.params;
-      const { description, status, rolesLookingFor, currentTeamMembers } = req.body;
+      const { description, status, rolesLookingFor } = req.body;
       const userId = req.user.userID || req.user._id;
   
       const project = await ProjectCollab.findById(id);
@@ -123,68 +132,31 @@ export const createNewProjectCollaboration = async (req, res) => {
       if (project.createdBy.toString() !== userId.toString()) {
         return res.status(403).json({ message: "You are not the owner of this project" });
       }
-  
-      /* ---------------- TEAM MEMBERS TOGGLE ---------------- */
-      if (currentTeamMembers && currentTeamMembers.length > 0) {
-        const users = await Users.find({}, "username _id");
-  
-        const userMap = new Map();
-        users.forEach((u) => userMap.set(u.username, u._id));
-  
-        // Convert username → ObjectId
-        for (let member of currentTeamMembers) {
-          if (!userMap.has(member.username)) {
-            return res.status(404).json({
-              message: `User not found with username ${member.username}`
-            });
-          }
-  
-          member.user = userMap.get(member.username);
-          delete member.username;
-        }
-  
-        // Remove duplicates inside request
-        const userIds = currentTeamMembers.map((m) => m.user.toString());
-        if (new Set(userIds).size !== userIds.length) {
-          return res.status(400).json({
-            message: "Duplicate users found in request"
-          });
-        }
-  
-        // Toggle logic
-        for (let member of currentTeamMembers) {
-  
-          const idx = project.currentTeamMembers.findIndex(
-            (m) => m.user.toString() === member.user.toString()
-          );
-  
-          if (idx !== -1) {
-            // ✅ USER EXISTS → REMOVE (Toggle OFF)
-            project.currentTeamMembers.splice(idx, 1);
-          } else {
-            // ✅ USER DOES NOT EXIST → ADD (Toggle ON)
-  
-            if (project.currentTeamMembers.length >= project.totalTeamSize) {
-              return res.status(400).json({
-                message: "Team size exceeds project limit"
-              });
-            }
-  
-            project.currentTeamMembers.push(member);
-          }
-        }
-      }
-  
       /* ---------------- BASIC UPDATES ---------------- */
       if (description) project.description = description;
       if (status) project.status = status;
-  
       if (rolesLookingFor && rolesLookingFor.length > 0) {
-        const uniqueRoles = new Set([
-          ...project.rolesLookingFor,
-          ...rolesLookingFor
-        ]);
-        project.rolesLookingFor = Array.from(uniqueRoles);
+
+        let roles = [];
+      
+        if (typeof rolesLookingFor === "string") {
+          roles = rolesLookingFor
+            .split(",")
+            .map(role => role.trim())
+            .filter(Boolean);
+        } else if (Array.isArray(rolesLookingFor)) {
+          roles = rolesLookingFor;
+        }
+      
+        roles.forEach(role => {
+          const index = project.rolesLookingFor.indexOf(role);
+      
+          if (index > -1) {
+            project.rolesLookingFor.splice(index, 1);
+          } else {
+            project.rolesLookingFor.push(role);
+          }
+        });
       }
   
       const updatedProject = await project.save();
@@ -316,142 +288,64 @@ export const deleteProjectById = async (req, res) => {
     }
 };
 
-export const requestForCollaboration = async (req, res) => {
-    try {
-        const projectId = req.params.id; // Correct param
-        const userId = req.user.userID || req.user._id
-        // console.log(userId);
-        const { email, message, githubLink, resume, experience, rolesApplied } =
-            req.body;
+export const addTeammate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(req.body);
+    const { username, role } = req.body;
 
-        if (!email || !message || !resume || !experience || !rolesApplied) {
-            return res
-                .status(400)
-                .json({ message: "All fields are required." });
-        }
-
-        const project = await ProjectCollab.findById(projectId);
-        if (!project) {
-            return res.status(404).json({ message: "Project not found." });
-        }
-
-        const invalidRoles = rolesApplied.filter(
-            (role) => !project.rolesLookingFor.includes(role)
-        );
-        if (invalidRoles.length > 0) {
-            return res.status(400).json({
-                message: `Invalid roles applied: ${invalidRoles.join(", ")}`,
-            });
-        }
-
-        const newRequest = await requestCollabModel.create({
-            email,
-            message,
-            resume,
-            experience,
-            rolesApplied,
-            githubLink: githubLink || null,
-            projectReffered: projectId,
-            createdBy: userId,
-        });
-        const updatedProject = await ProjectCollab.findByIdAndUpdate(
-            projectId,
-            {
-                $push: {
-                    pendingRequests: newRequest._id,
-                },
-            }
-        );
-        return res.status(201).json({
-            message: "Collaboration request submitted successfully.",
-            data: newRequest,
-        });
-    } catch (error) {
-        console.error("Error creating collaboration request:", error);
-        return res.status(500).json({
-            message: "Internal server error.",
-            error: error.message,
-        });
+    if (!username || !role) {
+      return res.status(400).json({ msg: "Invalid credentials" });
     }
-};
 
-export const acceptApplication = async (req, res) => {
-    try {
-        const { applicationId } = req.params;
-        // const { rolesAssigned } = req.body;
-        const userId = req.user.userID || req.user._id
-        if (!applicationId) {
-            return res
-                .status(400)
-                .json({
-                    message: "Application ID and rolesAssigned are required.",
-                });
-        }
+    const userId = req.user.userID || req.user._id;
 
-        const application = await requestCollabModel.findById(applicationId);
-        if (!application) {
-            return res.status(404).json({ message: "Application not found." });
-        }
+    const user = await User.findOne({ username });
 
-        const project = await ProjectCollab.findById(
-            application.projectReffered
-        );
-        if (!project) {
-            return res
-                .status(404)
-                .json({ message: "Associated project not found." });
-        }
-
-        if (userId.toString() !== project.createdBy.toString()) {
-            return res
-                .status(403)
-                .json({
-                    message:
-                        "You are not authorized to accept applications for this project."
-                });
-        }
-
-        // const invalidRoles = project.rolesAssigned.filter(
-        //     (role) => !project.rolesLookingFor.includes(role)
-        // );
-        // if (invalidRoles.length > 0) {
-        //     return res.status(400).json({
-        //         message: `Invalid role(s) assigned: ${invalidRoles.join(", ")}`,
-        //     });
-        // }
-        let Roles = "";
-
-        for (let role of application.rolesApplied) {
-            Roles += role + ", ";
-        }
-        Roles = Roles.slice(0, -2);
-        const acceptedMember = {
-            user: application.createdBy,
-            roleAssigned: Roles,
-        };
-
-        const updatedProject = await ProjectCollab.findByIdAndUpdate(
-            project._id,
-            {
-                $push: { currentTeamMembers: acceptedMember },
-                $pull: { pendingRequests: application._id },
-            },
-            { new: true }
-        );
-
-        await requestCollabModel.findByIdAndDelete(applicationId);
-
-        return res.status(200).json({
-            message: "Application accepted successfully.",
-            projectId: updatedProject._id,
-            addedMember: acceptedMember,
-            currentTeamSize: updatedProject.currentTeamMembers.length,
-        });
-    } catch (error) {
-        console.error("Error accepting application:", error);
-        return res.status(500).json({
-            message: "Internal server error.",
-            error: error.message,
-        });
+    if (!user) {
+      return res.status(404).json({ msg: "No such user exists" });
     }
+
+
+    const project = await ProjectCollab.findById(id);
+
+    if (!project) {
+      return res.status(404).json({ msg: "Project not found" });
+    }
+
+    const isAdmin =
+      project.createdBy.toString() === userId.toString();
+
+    if (!isAdmin) {
+      return res.status(403).json({ msg: "You are not admin" });
+    }
+
+    const alreadyMember = project.currentTeamMembers.some(
+      member => member.user.toString() === user._id.toString()
+    );
+
+    if (alreadyMember) {
+      return res.status(400).json({ msg: "User already in team" });
+    }
+
+    if (project.currentTeamMembers.length >= project.totalTeamSize) {
+      return res.status(400).json({ msg: "Team is already full" });
+    }
+
+    project.currentTeamMembers.push({
+      user: user._id,
+      roleAssigned: role
+    });
+
+    await project.save();
+
+    return res.status(200).json({
+      msg: "User added successfully",
+      project
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Server error" });
+  }
 };
