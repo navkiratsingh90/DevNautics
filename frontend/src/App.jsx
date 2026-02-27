@@ -81,7 +81,7 @@ const router = createBrowserRouter([
         element : <EventsPage/>
       },
       {
-        path : '/project',
+        path : '/team-workspace',
         element : <Workspaces/>
       },
       {

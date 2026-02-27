@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { deleteComment } from "../services/activityApis";
+import { Link } from "react-router";
 
 const CommentModal = ({
   isOpen,
@@ -9,8 +10,10 @@ const CommentModal = ({
   currentUserId,
   darkMode,
   onAddComment,
+  
 }) => {
   const [content, setContent] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   if (!isOpen) return null;
 
@@ -19,9 +22,12 @@ const CommentModal = ({
     onAddComment(activityId, content);
     setContent("");
   };
-	const onDeleteComment = async (actId,comId) => {
-		await deleteComment(actId,comId)
-	}
+
+  const onDeleteComment = async (actId, comId) => {
+    await deleteComment(actId, comId);
+    setOpenMenuId(null);
+    onClose()
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
@@ -44,7 +50,7 @@ const CommentModal = ({
             <p className="text-sm text-gray-400">No comments yet</p>
           )}
 
-          {comments.map(comment => (
+          {comments.map((comment) => (
             <div
               key={comment._id}
               className={`flex gap-3 p-3 rounded-lg ${
@@ -60,24 +66,51 @@ const CommentModal = ({
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-semibold text-sm">
-                      {comment.createdBy.name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      @{comment.createdBy.username}
+                    {/* <p className="font-semibold text-sm">
+                    </p> */}
+                    <p className="text-medium text-gray-400">
+                    <Link to={`/user/${comment.createdBy._id}`}>{comment.createdBy.username}</Link>
                     </p>
                   </div>
 
-                  {/* Delete Button */}
+                  {/* Three Dot Menu */}
                   {comment.createdBy._id === currentUserId && (
-                    <button
-                      onClick={() =>
-                        onDeleteComment(activityId, comment._id)
-                      }
-                      className="text-red-500 text-sm hover:underline"
-                    >
-                      Delete
-                    </button>
+                    <div className="relative flex">
+                      <div>
+                        {comment.createdAt.toString().slice(0,10)}
+                      </div>
+                      <button
+                        onClick={() =>
+                          setOpenMenuId(
+                            openMenuId === comment._id ? null : comment._id
+                          )
+                        }
+                        className="text-xl px-2"
+                      >
+                        ⋮
+                      </button>
+
+                      {openMenuId === comment._id && (
+                        <div
+                          className={`absolute right-0 mt-2 w-32 rounded-md shadow-lg ${
+                            darkMode ? "bg-gray-700" : "bg-white"
+                          }`}
+                        >
+                          <button
+                            onClick={() =>
+                              onDeleteComment(activityId, comment._id)
+                            }
+                            className={`block w-full text-left px-4 py-2 text-sm text-red-500 ${
+                              darkMode
+                                ? "hover:bg-gray-600"
+                                : "hover:bg-gray-200"
+                            }`}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -92,7 +125,7 @@ const CommentModal = ({
           <input
             type="text"
             value={content}
-            onChange={e => setContent(e.target.value)}
+            onChange={(e) => setContent(e.target.value)}
             placeholder="Write a comment..."
             className={`flex-1 px-4 py-2 rounded-full outline-none ${
               darkMode

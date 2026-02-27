@@ -49,7 +49,7 @@ const Navbar5 = () => {
     { title: "Code & Decode", description: "participate in exciting brain bowls to enhance your thinking capacity", href: "/code-decode" },
     { title: "Events", description: "showcase or promote various events to attract developers", href: "/events" },
     { title: "Project Collaboration", description: "Manage your Project with your teamates", href: "project-collaboration" },
-    { title: "Pending Requests", description: "See your pending requests", href: "pending-requests" },
+    { title: "Team-Workspace", description: "Track your team's workspace", href: "/team-workspace" },
   ];
 
   // Fake user (replace with real auth)

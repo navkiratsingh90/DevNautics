@@ -5,8 +5,6 @@ import {
     getAllProjects,
     getProjectById,
     deleteProjectById,
-    requestForCollaboration,
-    acceptApplication,
     addTeammate,
 } from "../controllers/project-controller.js"
 
@@ -53,12 +51,7 @@ router.delete(
     deleteProjectById
 );
 
-// Request for collaboration
-router.post(
-    "/:id/request",
-    authMiddleware,
-    requestForCollaboration
-);
+
 
 router.post(
     "/:id/add-member",
@@ -66,11 +59,5 @@ router.post(
     addTeammate
 );
 
-// Accept collaboration application
-router.post(
-    "/accept/:applicationId",
-    authMiddleware,
-    acceptApplication
-);
 
 export default router;

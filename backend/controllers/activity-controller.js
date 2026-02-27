@@ -91,16 +91,17 @@ export const getActivityById = async (req, res) => {
 
 /* ================= DELETE ACTIVITY ================= */
 export const deleteActivity = async (req, res) => {
+  // console.log(req.params.id);/.
   try {
-    const activity = await Activity.findById(req.params.id);
-
+    const id = req.params.id
+    const activity = await Activity.findById(id);
+    const userId = req.user.userID || req.user._id;
     if (!activity) {
       return res.status(404).json({ success: false, message: 'Activity not found' });
     }
 
     if (
-      activity.createdBy.toString() !== req.user._id.toString() &&
-      req.user.role !== 'Admin'
+      activity.createdBy._id.toString() !== userId.toString()
     ) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }

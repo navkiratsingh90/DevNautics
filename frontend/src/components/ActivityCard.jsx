@@ -3,6 +3,7 @@ import { addComment, deleteActivity, getActivities, getUserFeed, likeActivity } 
 import CommentModal from './CommentModal'
 import { IoSend } from "react-icons/io5"; // arrow icon
 import { useSelector } from 'react-redux';
+import { Heart } from 'lucide-react';
 
 
 const ActivityCard = ({post,darkMode, currentPage, totalPage}) => {
@@ -36,27 +37,43 @@ const [selectedPost, setSelectedPost] = useState(null);
     setShowComments(true);
   }
   const handleDelete = async (id) => {
-    // await deleteActivity(id)
-    // getUserFeed() // refresh after delete
-  }
+  //   try {
+      await deleteActivity(id);
+  
+  //     setPosts(prev =>
+  //       prev.filter(post => post._id !== id)
+  //     );
+  
+  //     setActiveMenu(null);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  };
   const handleLike = async (id) => {
-    setUserFeed(prev =>
-      prev.map(act => {
-        if (act._id !== id) return act;
-
-        const isLiked = act.likes.includes(userId);
-
-        return {
-          ...act,
-          likes: isLiked
-            ? act.likes.filter(like => like !== userId)
-            : [...act.likes, userId],
-          isLiked: !isLiked
-        };
+    setPosts(prevPosts =>
+      prevPosts.map(post => {
+        if (post._id === id) {
+          const isLiked = post.likes.some(e => e._id === userId);
+  
+          return {
+            ...post,
+            likes: isLiked
+              ? post.likes.filter(u => u._id !== userId) // remove correctly
+              : [...post.likes, { _id: userId }], // add correctly as object
+          };
+        }
+        return post;
       })
     );
-    // await likeActivity(id)
-
+  
+    try {
+      await likeActivity(id);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const handleDeleteComment = () => {
+    console.log("deleted");
   }
   useEffect(() => {
     const fetchActivities = async () => {
@@ -80,11 +97,11 @@ const [selectedPost, setSelectedPost] = useState(null);
   currentUserId={userId}
   darkMode={darkMode}
   onAddComment={addComment}
-  onDeleteComment={handleDelete()}
+  // onDeleteComment={handleDeleteComment()}
 />
 
 			{posts.map(post => (
-                <div key={post.id} className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <div key={post._id} className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                   {/* Post Header */}
                   <div className="p-4 border-b border-gray-700 flex items-center justify-between">
                     <div className="flex items-center">
@@ -112,7 +129,7 @@ const [selectedPost, setSelectedPost] = useState(null);
                       </button>
                       
                       {/* Dropdown Menu */}
-                      {activeMenu === post.id && (
+                      {activeMenu === post._id && (
                         <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${darkMode ? 'bg-gray-700' : 'bg-white'} ring-1 ring-black ring-opacity-5 z-10`}>
                           <div className="py-1">
                             {post.createdBy._id == userId ? (
@@ -161,16 +178,23 @@ const [selectedPost, setSelectedPost] = useState(null);
 
                     {/* Engagement Buttons */}
                     <div className="flex border-t border-b border-gray-700 py-2">
-                      <button 
-                        onClick={() => handleLike(post._id)}
-                        className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${post.isLiked ? 'text-blue-500' : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                        </svg>
-                        Like
-                      </button>
-                      
+                    <button 
+                      onClick={() => handleLike(post._id)}
+                      className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${
+                        post.likes.some(e => e._id == userId)
+                          ? 'text-red-500' 
+                          : darkMode 
+                            ? 'text-gray-400 hover:bg-gray-700' 
+                            : 'text-gray-500 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Heart
+                        className={`h-5 w-5 mr-2 transition-transform ${
+                          post.likes.includes(userId) ? "fill-red-500 scale-110" : ""
+                        }`}
+                      />
+                      Like
+                    </button>
                       <button
                       onClick={() => showCommentBox(post)}
                        className={`flex-1 flex items-center justify-center py-2 rounded-lg transition-colors ${darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'}`}>
