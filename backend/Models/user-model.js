@@ -56,8 +56,9 @@ const userSchema = new mongoose.Schema(
 
     activityPosted: [{ type: mongoose.Schema.Types.ObjectId, ref: "Activity" }],
     projectCollaborations: [{ type: mongoose.Schema.Types.ObjectId, ref: "projectCollab" }],
-    activeProjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "projectFlow" }],
-
+    activeProjects: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Workspace" }
+    ],
     totalPendingRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     connectedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 

@@ -1,98 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../Features/ThemeSlice";
+import { getUserProfile } from "../services/userApis";
+import { useParams } from "react-router";
 
 const ProjectsPage = () => {
+  const {id} = useParams()
  const darkMode = useSelector((state) => state.Theme.darkMode)
   const [showForm, setShowForm] = useState(false);
   const dispatch = useDispatch()
-  const user = useSelector((state) => state.Auth.user)
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "E-Commerce Platform",
-      description: "A full-stack e-commerce solution with React frontend, Node.js backend, and MongoDB database. Features user authentication, payment processing, and admin dashboard.",
-      githubLink: "https://github.com/username/ecommerce-platform",
-      liveLink: "https://ecommerce-demo.example.com",
-      screenshot: "🛒",
-      technologies: ["React", "Node.js", "MongoDB", "Stripe", "JWT"],
-      collaborators: [
-        {
-          name: "Alex Johnson",
-          role: "Frontend Developer",
-          avatar: "AJ",
-          contributions: [
-            "Implemented product catalog UI",
-            "Designed shopping cart functionality",
-            "Created responsive product pages"
-          ]
-        },
-        {
-          name: "Sarah Chen",
-          role: "Backend Developer",
-          avatar: "SC",
-          contributions: [
-            "Built RESTful API endpoints",
-            "Implemented payment processing",
-            "Set up database schema"
-          ]
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: "Task Management App",
-      description: "A collaborative task management application with real-time updates, drag-and-drop functionality, and team collaboration features.",
-      githubLink: "https://github.com/username/task-manager",
-      liveLink: "https://tasks.example.com",
-      screenshot: "📋",
-      technologies: ["React", "Firebase", "Tailwind CSS", "DnD"],
-      collaborators: [
-        {
-          name: "Mike Thompson",
-          role: "UI/UX Designer",
-          avatar: "MT",
-          contributions: [
-            "Designed user interface",
-            "Created component library",
-            "Optimized user experience flows"
-          ]
-        },
-        {
-          name: "Emily Rodriguez",
-          role: "Full Stack Developer",
-          avatar: "ER",
-          contributions: [
-            "Implemented real-time updates",
-            "Set up user authentication",
-            "Deployed to production"
-          ]
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: "Health & Fitness Tracker",
-      description: "A mobile-first web application for tracking workouts, nutrition, and health metrics with data visualization and progress reports.",
-      githubLink: "https://github.com/username/fitness-tracker",
-      liveLink: "https://fitlife.example.com",
-      screenshot: "💪",
-      technologies: ["React Native", "GraphQL", "Chart.js", "Firebase"],
-      collaborators: [
-        {
-          name: "David Kim",
-          role: "Mobile Developer",
-          avatar: "DK",
-          contributions: [
-            "Built cross-platform mobile app",
-            "Implemented health data tracking",
-            "Optimized performance for low-end devices"
-          ]
-        }
-      ]
-    }
-  ]);
-
+  // const user = useSelector((state) => state.Auth.user)
+  const [user, setUser] = useState(null)
+  const [projects, setProjects] = useState([])
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -110,38 +29,17 @@ const ProjectsPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newProject = {
-      id: projects.length + 1,
-      name: formData.name,
-      description: formData.description,
-      githubLink: formData.githubLink,
-      liveLink: formData.liveLink,
-      screenshot: "🚀",
-      technologies: formData.technologies.split(',').map(t => t.trim()),
-      collaborators: [
-        {
-          name: "You",
-          role: "Project Owner",
-          avatar: "YO",
-          contributions: formData.collaborators.split(',').map(c => c.trim())
-        }
-      ]
-    };
-    
-    setProjects([newProject, ...projects]);
-    setFormData({
-      name: "",
-      description: "",
-      githubLink: "",
-      liveLink: "",
-      technologies: "",
-      collaborators: ""
-    });
-    setShowForm(false);
-  };
-
+  // const handleSubmit = (e) => {
+  // };
+  const getUserWorkEx = async () => {
+    const res = await getUserProfile(id);
+    setUser(res.user)
+    console.log(res);
+  }
+  useEffect(() => {
+    getUserWorkEx()
+  },[])
+  if (!user) return <div>Loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[var(--color-darkBlue)]' : 'bg-[var(--color-white)]'}`}>
       <div className="max-w-6xl mx-auto px-4 py-8">

@@ -24,7 +24,7 @@ const router = express.Router();
 
 /* ===================== PROFILE ===================== */
 
-router.get("/profile", authMiddleware, getUserProfile);
+router.get("/:id", getUserProfile);
 router.put("/update-profile", authMiddleware, updateUserProfile);
 
 /* ===================== EDUCATION ===================== */

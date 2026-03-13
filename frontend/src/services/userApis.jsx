@@ -9,9 +9,10 @@ const API = axios.create({
   },
 });
 
-export const getUserProfile = async () => {
+export const getUserProfile = async (id) => {
   try {
-    const res = await API.get("/");
+    console.log(id);
+    const res = await API.get(`/${id}`);
     return res.data;
   } catch (error) {
     toast.error("Failed to load profile");

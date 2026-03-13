@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import UserDetails from "./UserDetails";
-import { BriefcaseBusiness, FileChartColumnIncreasing, FolderClosed, GraduationCap, LogOut, Medal, Menu, ToolCase, UserRound, X } from "lucide-react"; // optional if you use lucide-react icons
+import { BriefcaseBusiness, FileChartColumnIncreasing, FolderClosed, GraduationCap, LogOut, Medal, Menu, ToolCase, UserRound, X, BarChart3 } from "lucide-react"; // optional if you use lucide-react icons
 import WorkExperience from "./WorkEx";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import { useSelector } from "react-redux";
 
 const Sidebar = () => {
+  const {id} = useParams()
   const [activeSection, setActiveSection] = useState("user");
   const darkMode = useSelector(state => state.Theme.darkMode)
   const userId = useSelector(state => state.Auth.userId)
@@ -17,6 +18,7 @@ const Sidebar = () => {
     { id: "education", title: "Education", icon:  <GraduationCap />, to: 'education' },
     { id: "activity", title: "Activity", icon: <FileChartColumnIncreasing />, to : 'activity' },
     { id: "projects", title: "Projects", icon: <FolderClosed />, to : 'projects' },
+    { id: "Analytics", title: "Analytics", icon: <BarChart3 />, to : 'Analytics' },
     { id: "skills", title: "Skills", icon: <ToolCase />, to : 'skills' },
     { id: "certifications", title: "Certifications", icon:  <Medal /> , to : 'certifications' },
   ];
@@ -53,7 +55,7 @@ const Sidebar = () => {
         {/* Navigation Sections */}
         <div className="flex-1 overflow-y-auto py-4">
           {sections.map((section) => (
-            <Link to={`/user/${userId}/${section.to}`} key={section.id} className="mb-1" >
+            <Link to={`/user/${id}/${section.to}`} key={section.id} className="mb-1" >
               <button
                 onClick={() => {
                   setActiveSection(section.id);

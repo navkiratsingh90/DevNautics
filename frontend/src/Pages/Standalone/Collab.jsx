@@ -223,8 +223,8 @@ const AddTeammateForm = ({
               Role *
             </label>
             <select
-              name="role"
-              value={teammateData.role}
+              name="roleAssigned"
+              value={teammateData.roleAssigned}
               onChange={onInputChange}
               required
               className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
@@ -297,7 +297,7 @@ const ProjectCollaboration = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [teammateData, setTeammateData] = useState({
     username: '',
-    role: ''
+    roleAssigned : ''
   });
   const [roles, setRoles] = useState([]);
   const [data, setData] = useState(null);
@@ -354,6 +354,7 @@ const ProjectCollaboration = () => {
       ...prev,
       [name]: value
     }));
+    // console.log(teammateData);
   };
 
   // const handleEditProject = async (updatedData) => {

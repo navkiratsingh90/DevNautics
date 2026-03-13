@@ -3,14 +3,16 @@ import Activity from "../models/activity-model.js";
 import Challenge from "../models/challenge-model.js";
 import cloudinary from '../utils/cloudinary.js'
 import getDataUri from '../utils/datauri.js';
-import ProjectFlow from "../models/workspace-model.js";
+import Workspace from "../models/workspace-model.js";
 import Discussion from "../models/discussion-model.js"
 import mongoose from 'mongoose';
 // ===================== PROFILE =====================
 
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user)
+    const userId = req.params.id;
+    console.log(req.params);
+    const user = await User.findById(userId)
       .populate("activeProjects")
       .populate("connectedUsers", "username email")
       .populate("challengesAttended");

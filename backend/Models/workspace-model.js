@@ -52,7 +52,7 @@ const memberRoleSchema = new mongoose.Schema({
     }
 });
 
-const projectFlowSchema = new mongoose.Schema(
+const workspaceScehma = new mongoose.Schema(
     {
         title: { 
 					type: String, 
@@ -100,9 +100,9 @@ const projectFlowSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-const ProjectCollaboration = mongoose.model(
-    "ProjectFlow",
-    projectFlowSchema
+ const Workspace = mongoose.model(
+  "Workspace",
+  workspaceScehma
 );
 
-export default ProjectCollaboration;
+export default Workspace

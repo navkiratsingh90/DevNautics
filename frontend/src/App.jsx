@@ -36,6 +36,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { getUser } from "./services/authApis.jsx";
 import { handleCredentials } from "./Features/AuthSlice.jsx";
+import Analytics from "./components/Analytics.jsx";
 
 const router = createBrowserRouter([
   {
@@ -121,6 +122,10 @@ const router = createBrowserRouter([
       {
         path : '/user/:id',
         element : <UserProfile/>
+      },
+      {
+        path : '/user/:id/analytics',
+        element : <Analytics/>
       },
       {
         path : '/user/:id/work-experience',

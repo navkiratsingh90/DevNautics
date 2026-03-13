@@ -2,7 +2,7 @@
 
 
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../Features/ThemeSlice";
 
@@ -11,10 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useParams } from "react-router";
+import { getUserProfile } from "../services/userApis";
 
 const WorkExperience = () => {
+  const {id} = useParams()
   const darkMode = useSelector((state) => state.Theme.darkMode);
-  const user = useSelector((state) => state.Auth.user);
+  const [user,setUser] = useState(null)
+  // const user = useSelector((state) => state.Auth.user)
   const dispatch = useDispatch();
   const [showForm, setShowForm] = useState(false);
 
@@ -52,7 +56,15 @@ const WorkExperience = () => {
     setFormData({ company: "", role: "", duration: "", location: "", description: "", certifications: "" });
     setShowForm(false);
   };
-
+  const getUserWorkEx = async () => {
+    const res = await getUserProfile(id);
+    setUser(res.user)
+    console.log(res);
+  }
+  useEffect(() => {
+    getUserWorkEx()
+  },[])
+  if (!user) return <div>Loading...</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? "bg-[var(--color-darkBlue)]" : "bg-[var(--color-white)]"}`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-8">

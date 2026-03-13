@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../Features/ThemeSlice";
+import { getUserProfile } from "../services/userApis";
+import { useParams } from "react-router";
 
 const EducationPage = () => {
+  const {id} = useParams()
   const darkMode = useSelector(state => state.Theme.darkMode)
-  const user = useSelector(state => state.Auth.user)
+  // const user = useSelector(state => state.Auth.user)
+  const [user,setUser] = useState(null)
   const dispatch = useDispatch()
   const [showForm, setShowForm] = useState(false);
 
@@ -33,7 +37,15 @@ const EducationPage = () => {
     });
     setShowForm(false);
   };
-
+  const getUserEducation = async () => {
+    const res = await getUserProfile(id);
+    setUser(res.user)
+    console.log(res);
+  }
+  useEffect(() => {
+    getUserEducation()
+  },[])
+  if (!user) return <div>Loading....</div>
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[var(--color-darkBlue)]' : 'bg-[var(--color-white)]'}`}>
       <div className="max-w-4xl mx-auto px-4 py-8">

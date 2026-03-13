@@ -1,20 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import PopupForm from "./PopupUserForm";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../Features/ThemeSlice";
+import axios from "axios";
+import { getUserProfile } from "../services/userApis";
+import { useParams } from "react-router";
 
 
 const UserProfile = () => {
+  const {id} = useParams()
   const [isConnected, setIsConnected] = useState(false);
   // const [darkMode, setDarkMode] = useState(false);
-  const user = useSelector((state) => state.Auth.user)
+  const [user,setUser] = useState(null)
+  // const user = useSelector((state) => state.Auth.user)
   const userId = useSelector((state) => state.Auth.userId)
   const [isOpen,setIsOpen] = useState(false)
   const darkMode = useSelector((state) => state.Theme.darkMode)
   const dispatch = useDispatch()
-
-  return (
+  const getUser = async () => {
+    const res = await getUserProfile(id);
+    setUser(res.user)
+    console.log(res);
+  }
+  useEffect(() => {
+    getUser()
+  },[])
+  if (!user) return <div>Loading....</div>
+  return (  
     <>
  {isOpen && (
   <PopupForm open={isOpen} onOpenChange={setIsOpen} />
@@ -103,7 +116,8 @@ const UserProfile = () => {
 
             {/* Name and Title */}
             <div className="absolute top-16 sm:top-20 right-4 cursor-pointer">
-              <Pencil onClick={() => setIsOpen(prev => !prev)} className="w-5 h-5 sm:w-6 sm:h-6" />
+              {userId == user._id ?  <Pencil onClick={() => setIsOpen(prev => !prev)} className="w-5 h-5 sm:w-6 sm:h-6" /> : ""}
+             
             </div>
             <div className="text-center mb-6">
               <h2
@@ -122,7 +136,7 @@ const UserProfile = () => {
             <div className="flex justify-center mb-8">
               <button
                 className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full transition-all duration-300 font-medium text-sm sm:text-base ${
-                  user._id == userId || user.connnectedUsers.contains(userId)
+                  user._id == userId || (user.connectedUsers.length > 0 ? user.connectedUsers.includes(userId) : "")
                     ? `${
                         darkMode
                           ? "bg-green-900 text-green-200"
@@ -132,7 +146,7 @@ const UserProfile = () => {
                 }`}
                 onClick={() => setIsConnected(!isConnected)}
               >
-                {user._id == userId || user.connnectedUsers.contains(userId) ? "Connected" : "Connect +"}
+                {user._id == userId || user.connectedUsers.includes(userId) ? "Connected" : "Connect +"}
               </button>
             </div>
 
