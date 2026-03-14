@@ -12,7 +12,7 @@ const Page = () => {
 	const dispatch = useDispatch()
   const getCurrUser = async () => {
     const res = await getUser()
-    // console.log(res.data);
+    console.log(res.data);
     dispatch(handleCredentials(res.data.user))
   }
 

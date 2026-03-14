@@ -5,7 +5,6 @@ import { Pencil } from "lucide-react";
 import { getUserProfile, updateSkills } from "../services/userApis";
 import { useParams } from "react-router";
 
-// Mapping of skill names to emoji icons (case‑insensitive)
 const skillIcons = {
   react: "⚛️",
   javascript: "📜",
@@ -209,10 +208,10 @@ const SkillsPage = () => {
                 }`}
               >
                 <div className="p-6">
-                  <div className="flex items-center">
-                    <span className="text-3xl mr-3" role="img" aria-label={skill}>
-                      {getSkillIcon(skill)}
-                    </span>
+                  <div className="flex gap-4 items-center">
+                    <span className="w-8">
+                  <img  src={`https://cdn.simpleicons.org/${skill}`} />
+                  </span>
                     <h3 className={`text-xl font-semibold ${darkMode ? "text-white" : "text-gray-800"}`}>
                       {skill}
                     </h3>

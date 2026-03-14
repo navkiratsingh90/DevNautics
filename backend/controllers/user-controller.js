@@ -13,13 +13,12 @@ export const getUserProfile = async (req, res) => {
     const userId = req.params.id;
     console.log(req.params);
     const user = await User.findById(userId)
-      .populate("activeProjects")
       .populate("connectedUsers", "username email")
-      .populate("challengesAttended");
-
+    const activities = await Activity.countDocuments({createdBy : userId})
+    // const challenges = await Challenge.countDocuments({})
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    res.status(200).json({ user });
+    res.status(200).json({ user, totalActivities : activities });
   } catch (error) {
     console.error("getUserProfile:", error);
     res.status(500).json({ msg: "Failed to fetch profile" });
@@ -311,8 +310,8 @@ export const sendConnectionRequest = async (req, res) => {
 export const approveConnectionRequest = async (req, res) => {
   try {
     const { requesterId } = req.body;
-    const userId = req.user;
-
+    const userId = req.user.userID || req.user._id;
+    
     const [user, requester] = await Promise.all([
       User.findById(userId),
       User.findById(requesterId)

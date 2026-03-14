@@ -11,7 +11,6 @@ const API = axios.create({
 
 export const getUserProfile = async (id) => {
   try {
-    console.log(id);
     const res = await API.get(`/${id}`);
     return res.data;
   } catch (error) {
@@ -88,7 +87,7 @@ export const updateSkills = async (data) => {
 
 export const sendConnectionRequest = async (targetUserId) => {
   try {
-    const res = await API.post("/connect", { targetUserId });
+    const res = await API.post("/connections/request", { targetUserId });
     toast.success("Connection request sent 🤝");
     return res.data;
   } catch (error) {
@@ -98,7 +97,7 @@ export const sendConnectionRequest = async (targetUserId) => {
 };
 export const approveConnectionRequest = async (requesterId) => {
   try {
-    const res = await API.post("/approve", { requesterId });
+    const res = await API.post("/connections/approve", { requesterId });
     toast.success("Connection approved ✅");
     return res.data;
   } catch (error) {

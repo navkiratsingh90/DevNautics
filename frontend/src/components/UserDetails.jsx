@@ -4,7 +4,7 @@ import PopupForm from "./PopupUserForm";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../Features/ThemeSlice";
 import axios from "axios";
-import { getUserProfile } from "../services/userApis";
+import { getUserProfile, sendConnectionRequest } from "../services/userApis";
 import { useParams } from "react-router";
 
 
@@ -13,14 +13,21 @@ const UserProfile = () => {
   const [isConnected, setIsConnected] = useState(false);
   // const [darkMode, setDarkMode] = useState(false);
   const [user,setUser] = useState(null)
+  const [totalActivities,setTotalActivities] = useState(0);
   // const user = useSelector((state) => state.Auth.user)
   const userId = useSelector((state) => state.Auth.userId)
   const [isOpen,setIsOpen] = useState(false)
   const darkMode = useSelector((state) => state.Theme.darkMode)
   const dispatch = useDispatch()
+  const handleConnectionRequest = async () => {
+    const res = await sendConnectionRequest(id);
+    console.log(res);
+  }
+  console.log("user id = ", userId);
   const getUser = async () => {
     const res = await getUserProfile(id);
     setUser(res.user)
+    setTotalActivities(res.totalActivities)
     console.log(res);
   }
   useEffect(() => {
@@ -133,10 +140,11 @@ const UserProfile = () => {
             </div>
 
             {/* Connection Button */}
-            <div className="flex justify-center mb-8">
-              <button
+            {/* <div className="flex justify-center mb-8"> */}
+              {
+                user._id != userId ? <div className="flex justify-center mb-8"><button
                 className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full transition-all duration-300 font-medium text-sm sm:text-base ${
-                  user._id == userId || (user.connectedUsers.length > 0 ? user.connectedUsers.includes(userId) : "")
+                  user.connectedUsers.some(user => user._id == userId)
                     ? `${
                         darkMode
                           ? "bg-green-900 text-green-200"
@@ -144,11 +152,16 @@ const UserProfile = () => {
                       } shadow-inner`
                     : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 }`}
-                onClick={() => setIsConnected(!isConnected)}
+                onClick={() => handleConnectionRequest()}
               >
-                {user._id == userId || user.connectedUsers.includes(userId) ? "Connected" : "Connect +"}
-              </button>
-            </div>
+                {/* {user._id === id || user.connectedUsers.includes(userId) ? "Connected" : "Connect +"} */}
+                {
+                  user.connectedUsers.some(user => user._id == userId) ? "connected" : user.totalPendingRequests.some( user => user == userId) ? "request sent" : "connect +"
+                }
+              </button></div> : ""
+              }
+              
+            {/* </div> */}
 
             {/* Skills */}
             <div className="mb-8">
@@ -179,7 +192,7 @@ const UserProfile = () => {
             <div className="grid  grid-cols-3 gap-2 sm:gap-4 mb-8">
               {[
                 { value: user.connectedUsers.length, label: "Connections" },
-                { value: user.activityPosted.length, label: "Posts" },
+                { value: totalActivities, label: "Posts" },
                 { value: user.projects.length, label: "Projects" }
               ].map((stat) => (
                 <div

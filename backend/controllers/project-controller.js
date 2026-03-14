@@ -294,7 +294,7 @@ export const addTeammate = async (req, res) => {
     console.log(req.body);
     const { username, role } = req.body;
 
-    if (!username || !role) {
+    if (!username || !roleAssigned) {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
@@ -321,7 +321,7 @@ export const addTeammate = async (req, res) => {
     }
 
     const alreadyMember = project.currentTeamMembers.some(
-      member => member.user.toString() === user._id.toString()
+      member => member.user.toString() === user.username.toString()
     );
 
     if (alreadyMember) {
@@ -333,8 +333,8 @@ export const addTeammate = async (req, res) => {
     }
 
     project.currentTeamMembers.push({
-      user: user._id,
-      roleAssigned: role
+      user: username,
+      roleAssigned: roleAssigned
     });
 
     await project.save();

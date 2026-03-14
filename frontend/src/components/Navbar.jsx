@@ -36,6 +36,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../Features/ThemeSlice";
+import { logoutUser } from "../services/authApis";
 
 const Navbar5 = () => {
   const darkMode = useSelector((state) => state.Theme.darkMode)
@@ -154,7 +155,7 @@ const Navbar5 = () => {
             </button>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <button onClick={() => console.log("Logout")}>
+                    <button onClick={() => logoutUser()}>
                       Logout
                     </button>
                   </DropdownMenuItem>
@@ -222,7 +223,7 @@ const Navbar5 = () => {
 
                 <div className="mt-6 flex flex-col gap-4">
                   {user ? (
-                    <Button onClick={() => console.log("Logout")}>Logout</Button>
+                    <Button onClick={() => logoutUser()}>Logout</Button>
                   ) : (
                     <>
                       <Button>Sign in</Button>

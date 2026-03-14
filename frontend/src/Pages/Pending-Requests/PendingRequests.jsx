@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { handleTheme } from "../../Features/ThemeSlice";
-import { getPendingRequests } from "../../services/userApis";
+import { approveConnectionRequest, getPendingRequests } from "../../services/userApis";
 
 const PendingRequestsPage = () => {
   const darkMode = useSelector((state) => state.Theme.darkMode)
@@ -66,11 +66,6 @@ const PendingRequestsPage = () => {
     }
   ]);
 
-  const handleAccept = (requestId) => {
-    setRequests(requests.filter(request => request.id !== requestId));
-    // In a real app, you would also update the backend
-    console.log(`Accepted request ${requestId}`);
-  };
 
   const handleDecline = (requestId) => {
     setRequests(requests.filter(request => request.id !== requestId));
@@ -82,10 +77,16 @@ const PendingRequestsPage = () => {
     setRequests([]);
     console.log("Accepted all requests");
   };
+  const handleAccept = async (id) => {
+    console.log(id);
+    const res = await approveConnectionRequest(id)
+    console.log(res);
+  }
   const processPendingRequests = (res) => {
     const allRequests = []
     for (const req of res.pendingRequests){
       let allSkills = [];
+      const id = req._id
       const about = req.about;
       const username = req.username
       const skills = req.skills
@@ -97,7 +98,8 @@ const PendingRequestsPage = () => {
       const currData = {
         allSkills,
         about,
-        username
+        username,
+        id
       }
       allRequests.push(currData)
     }
@@ -107,7 +109,6 @@ const PendingRequestsPage = () => {
     const fetchRequests = async () => {
       const res = await getPendingRequests()
       console.log(res.pendingRequests);
-      // const skill = []
       processPendingRequests(res)
       console.log(data);
     }
@@ -165,13 +166,13 @@ const PendingRequestsPage = () => {
             {/* Requests List */}
             <div className="space-y-6">
               {data.map(request => (
-                <div key={request.id} className={`rounded-2xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <div key={request._id} className={`rounded-2xl shadow-lg overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
                   <div className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
                       {/* User Info */}
                       <div className="flex-shrink-0">
                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto md:mx-0">
-                          <span className="text-white text-2xl font-bold">{request.username.slice(0,2).toLocaleUpperCase()}</span>
+                          <span className="text-white text-2xl font-bold">{request.username.slice(0,2).toLocaleUpperCase()} </span>
                         </div>
                       </div>
                       
