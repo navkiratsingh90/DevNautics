@@ -292,7 +292,7 @@ export const addTeammate = async (req, res) => {
   try {
     const { id } = req.params;
     console.log(req.body);
-    const { username, role } = req.body;
+    const { username, roleAssigned } = req.body;
 
     if (!username || !roleAssigned) {
       return res.status(400).json({ msg: "Invalid credentials" });
@@ -321,7 +321,7 @@ export const addTeammate = async (req, res) => {
     }
 
     const alreadyMember = project.currentTeamMembers.some(
-      member => member.user.toString() === user.username.toString()
+      member => member.user.toString() === user._id.toString()
     );
 
     if (alreadyMember) {
@@ -333,7 +333,69 @@ export const addTeammate = async (req, res) => {
     }
 
     project.currentTeamMembers.push({
-      user: username,
+      user: user._id,
+      roleAssigned: roleAssigned
+    });
+
+    await project.save();
+
+    return res.status(200).json({
+      msg: "User added successfully",
+      project
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+export const removeTeammate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(req.body);
+    const { username, roleAssigned } = req.body;
+
+    if (!username || !roleAssigned) {
+      return res.status(400).json({ msg: "Invalid credentials" });
+    }
+
+    const userId = req.user.userID || req.user._id;
+
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ msg: "No such user exists" });
+    }
+
+
+    const project = await ProjectCollab.findById(id);
+
+    if (!project) {
+      return res.status(404).json({ msg: "Project not found" });
+    }
+
+    const isAdmin =
+      project.createdBy.toString() === userId.toString();
+
+    if (!isAdmin) {
+      return res.status(403).json({ msg: "You are not admin" });
+    }
+
+    const alreadyMember = project.currentTeamMembers.some(
+      member => member.user.toString() === user._id.toString()
+    );
+
+    if (alreadyMember) {
+      return res.status(400).json({ msg: "User already in team" });
+    }
+
+    if (project.currentTeamMembers.length >= project.totalTeamSize) {
+      return res.status(400).json({ msg: "Team is already full" });
+    }
+
+    project.currentTeamMembers.push({
+      user: user._id,
       roleAssigned: roleAssigned
     });
 

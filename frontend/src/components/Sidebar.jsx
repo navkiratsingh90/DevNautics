@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import UserDetails from "./UserDetails";
-import { BriefcaseBusiness, FileChartColumnIncreasing, FolderClosed, GraduationCap, LogOut, Medal, Menu, ToolCase, UserRound, X, BarChart3 } from "lucide-react"; // optional if you use lucide-react icons
+import { BriefcaseBusiness, FileChartColumnIncreasing, FolderClosed, GraduationCap, LogOut, Medal, Menu, ToolCase, UserRound, X, BarChart3, Workflow } from "lucide-react"; // optional if you use lucide-react icons
 import WorkExperience from "./WorkEx";
 import { Link, useParams } from "react-router";
 import { useSelector } from "react-redux";
@@ -20,6 +20,7 @@ const Sidebar = () => {
     { id: "projects", title: "Projects", icon: <FolderClosed />, to : 'projects' },
     { id: "Analytics", title: "Analytics", icon: <BarChart3 />, to : 'Analytics' },
     { id: "skills", title: "Skills", icon: <ToolCase />, to : 'skills' },
+    { id: "workspace", title: "Workspace", icon:  <Workflow /> , to : 'workspace' },
     { id: "certifications", title: "Certifications", icon:  <Medal /> , to : 'certifications' },
   ];
 

@@ -1,5 +1,11 @@
 import express from "express";
 import {
+  getAuthUrl,
+  getTokens,
+  createCalendarEvent,
+} from "../services/googleCalendarService.js";
+
+import {
   createNewProject,
   addMembers,
   assignTasks,
@@ -10,10 +16,6 @@ import {
   getProjectByStatus,
   deleteProjectById,
   getTopContributors,
-  addCalendarEvent,
-  updateCalendarEvent,
-  deleteCalendarEvent,
-  getProjectCalendar,
   removeMember,
   deleteTask,
 } from "../controllers/projectTracker-controller.js";
@@ -72,16 +74,40 @@ router.get("/:projectId/top-contributors", authMiddleware, getTopContributors);
 
 /* -------------------- 🗓️ CALENDAR MANAGEMENT -------------------- */
 
-// ✅ Add event to project calendar
-router.post("/:projectId/calendar", authMiddleware, addCalendarEvent);
 
-// ✅ Update event
-router.put("/:projectId/calendar/:eventId", authMiddleware, updateCalendarEvent);
 
-// ✅ Delete event
-router.delete("/:projectId/calendar/:eventId", authMiddleware, deleteCalendarEvent);
+// 1. Redirect to Google Login
+router.get("/auth", (req, res) => {
+  const url = getAuthUrl();
+  res.redirect(url);
+});
 
-// ✅ Get all events for a project
-router.get("/:projectId/calendar", authMiddleware, getProjectCalendar);
+// 2. Callback
+router.get("/callback", async (req, res) => {
+  const code = req.query.code;
+
+  const tokens = await getTokens(code);
+
+  // 👉 store tokens in DB (important)
+  console.log(tokens);
+
+  res.send("Connected Successfully ✅");
+});
+
+// 3. Create Event
+router.post("/create-event", async (req, res) => {
+ const user = req.user.userID || req.user._id;
+
+  const event = await createCalendarEvent({
+    accessToken: user.googleAccessToken,
+    refreshToken: user.googleRefreshToken,
+    title: req.body.title,
+    description: req.body.description,
+    startDate: req.body.startDate,
+    endDate: req.body.endDate,
+  });
+
+  res.json(event);
+});
 
 export default router;

@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { handleTheme } from '../../Features/ThemeSlice';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const ProjectTracker = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const darkMode = useSelector((state) => state.Theme.darkMode);
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddForm, setShowAddForm] = useState(false);
   const [formType, setFormType] = useState('');
   const [editingItem, setEditingItem] = useState(null);
 
-  // Mock data for project
+  // Mock project data
   const projectData = {
     name: "AI Code Assistant",
     description: "An intelligent code completion tool using machine learning",
@@ -67,27 +74,19 @@ const ProjectTracker = () => {
 
   const isLeader = true; // Assuming current user is the leader
 
-  const toggleTheme = () => {
-    setDarkMode(!darkMode);
-  };
-
   // Form handling functions
   const handleOpenForm = (type, item = null) => {
     setFormType(type);
     setEditingItem(item);
-    
     if (item) {
-      // Editing existing item
       if (type === 'task') setTaskForm(item);
       if (type === 'team') setTeamForm(item);
       if (type === 'event') setEventForm(item);
     } else {
-      // Adding new item - reset forms
       if (type === 'task') setTaskForm({ description: '', priority: 'Low', assignedTo: '', dueDate: '', status: 'Pending' });
       if (type === 'team') setTeamForm({ name: '', role: '', email: '' });
       if (type === 'event') setEventForm({ title: '', description: '', startDate: '', endDate: '', type: 'Meeting' });
     }
-    
     setShowAddForm(true);
   };
 
@@ -99,24 +98,18 @@ const ProjectTracker = () => {
 
   const handleSubmitForm = (e) => {
     e.preventDefault();
-    
     if (formType === 'task') {
       if (editingItem) {
-        // Update existing task
         setTasks(tasks.map(task => task.id === editingItem.id ? { ...taskForm, id: editingItem.id } : task));
       } else {
-        // Add new task
         const newTask = { ...taskForm, id: tasks.length + 1 };
         setTasks([...tasks, newTask]);
       }
     }
-    
     if (formType === 'team') {
       if (editingItem) {
-        // Update existing team member
         setTeamMembers(teamMembers.map(member => member.id === editingItem.id ? { ...teamForm, id: editingItem.id, avatar: teamForm.name.split(' ').map(n => n[0]).join('') } : member));
       } else {
-        // Add new team member
         const newMember = { 
           ...teamForm, 
           id: teamMembers.length + 1, 
@@ -125,29 +118,21 @@ const ProjectTracker = () => {
         setTeamMembers([...teamMembers, newMember]);
       }
     }
-    
     if (formType === 'event') {
       if (editingItem) {
-        // Update existing event
         setCalendarEvents(calendarEvents.map(event => event.id === editingItem.id ? { ...eventForm, id: editingItem.id } : event));
       } else {
-        // Add new event
         const newEvent = { ...eventForm, id: calendarEvents.length + 1, assignedMembers: [] };
         setCalendarEvents([...calendarEvents, newEvent]);
       }
     }
-    
     handleCloseForm();
   };
 
   const handleDeleteItem = (type, id) => {
-    if (type === 'task') {
-      setTasks(tasks.filter(task => task.id !== id));
-    } else if (type === 'team') {
-      setTeamMembers(teamMembers.filter(member => member.id !== id));
-    } else if (type === 'event') {
-      setCalendarEvents(calendarEvents.filter(event => event.id !== id));
-    }
+    if (type === 'task') setTasks(tasks.filter(task => task.id !== id));
+    else if (type === 'team') setTeamMembers(teamMembers.filter(member => member.id !== id));
+    else if (type === 'event') setCalendarEvents(calendarEvents.filter(event => event.id !== id));
   };
 
   // Helper functions
@@ -182,7 +167,7 @@ const ProjectTracker = () => {
     return teamMembers.find(member => member.id === memberId);
   };
 
-  // Form Component
+  // Form Modal Component
   const AddFormModal = () => {
     if (!showAddForm) return null;
 
@@ -194,13 +179,12 @@ const ProjectTracker = () => {
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className={`w-full max-w-md rounded-2xl shadow-2xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className={`p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <h2 className="text-2xl font-bold">{getFormTitle()}</h2>
-          </div>
-          
-          <form onSubmit={handleSubmitForm} className="p-6 space-y-4">
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className={darkMode ? 'bg-gray-800 text-white' : 'bg-white'}>
+          <DialogHeader>
+            <DialogTitle>{getFormTitle()}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitForm} className="space-y-4">
             {/* Task Form */}
             {formType === 'task' && (
               <>
@@ -208,13 +192,11 @@ const ProjectTracker = () => {
                   <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Task Description
                   </label>
-                  <textarea
+                  <Textarea
                     value={taskForm.description}
                     onChange={(e) => setTaskForm({...taskForm, description: e.target.value})}
                     rows="3"
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                     required
                   />
                 </div>
@@ -226,9 +208,7 @@ const ProjectTracker = () => {
                     <select
                       value={taskForm.priority}
                       onChange={(e) => setTaskForm({...taskForm, priority: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     >
                       <option value="Low">Low</option>
                       <option value="Medium">Medium</option>
@@ -242,9 +222,7 @@ const ProjectTracker = () => {
                     <select
                       value={taskForm.status}
                       onChange={(e) => setTaskForm({...taskForm, status: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                     >
                       <option value="Pending">Pending</option>
                       <option value="In Progress">In Progress</option>
@@ -260,9 +238,7 @@ const ProjectTracker = () => {
                     <select
                       value={taskForm.assignedTo}
                       onChange={(e) => setTaskForm({...taskForm, assignedTo: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                       required
                     >
                       <option value="">Select Member</option>
@@ -275,13 +251,11 @@ const ProjectTracker = () => {
                     <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Due Date
                     </label>
-                    <input
+                    <Input
                       type="date"
                       value={taskForm.dueDate}
                       onChange={(e) => setTaskForm({...taskForm, dueDate: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                     />
                   </div>
                 </div>
@@ -295,13 +269,11 @@ const ProjectTracker = () => {
                   <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Full Name
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={teamForm.name}
                     onChange={(e) => setTeamForm({...teamForm, name: e.target.value})}
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                     required
                   />
                 </div>
@@ -309,13 +281,11 @@ const ProjectTracker = () => {
                   <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Role
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={teamForm.role}
                     onChange={(e) => setTeamForm({...teamForm, role: e.target.value})}
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                     required
                   />
                 </div>
@@ -323,13 +293,11 @@ const ProjectTracker = () => {
                   <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Email
                   </label>
-                  <input
+                  <Input
                     type="email"
                     value={teamForm.email}
                     onChange={(e) => setTeamForm({...teamForm, email: e.target.value})}
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                     required
                   />
                 </div>
@@ -343,13 +311,11 @@ const ProjectTracker = () => {
                   <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Event Title
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={eventForm.title}
                     onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                     required
                   />
                 </div>
@@ -357,13 +323,11 @@ const ProjectTracker = () => {
                   <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Description
                   </label>
-                  <textarea
+                  <Textarea
                     value={eventForm.description}
                     onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
                     rows="2"
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                   />
                 </div>
                 <div>
@@ -373,9 +337,7 @@ const ProjectTracker = () => {
                   <select
                     value={eventForm.type}
                     onChange={(e) => setEventForm({...eventForm, type: e.target.value})}
-                    className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                    }`}
+                    className={`w-full px-4 py-2 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
                   >
                     <option value="Meeting">Meeting</option>
                     <option value="Deadline">Deadline</option>
@@ -388,13 +350,11 @@ const ProjectTracker = () => {
                     <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Start Date
                     </label>
-                    <input
+                    <Input
                       type="datetime-local"
                       value={eventForm.startDate}
                       onChange={(e) => setEventForm({...eventForm, startDate: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                       required
                     />
                   </div>
@@ -402,13 +362,11 @@ const ProjectTracker = () => {
                     <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       End Date
                     </label>
-                    <input
+                    <Input
                       type="datetime-local"
                       value={eventForm.endDate}
                       onChange={(e) => setEventForm({...eventForm, endDate: e.target.value})}
-                      className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                      className={darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
                       required
                     />
                   </div>
@@ -417,134 +375,118 @@ const ProjectTracker = () => {
             )}
 
             <div className="flex gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleCloseForm}
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold border-2 transition-colors ${
-                  darkMode ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'
-                }`}
-              >
+              <Button variant="outline" onClick={handleCloseForm} className="flex-1">
                 Cancel
-              </button>
-              <button
-                type="submit"
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold text-white transition-colors ${
-                  darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
-                }`}
-              >
+              </Button>
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
                 {editingItem ? 'Update' : 'Add'}
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     );
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <div className={`w-64 min-h-screen ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
-          <div className="p-6 border-b border-gray-700">
-            <h2 className="text-xl font-bold">{projectData.name}</h2>
-            <p className={`text-sm mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {projectData.description}
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[var(--color-darkBlue)]' : 'bg-white'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8">
+        {/* Header with title and theme toggle */}
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className={`text-3xl sm:text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+              Project Tracker
+            </h1>
+            <p className={`mt-1 text-base sm:text-lg ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              Monitor and manage your active projects
             </p>
           </div>
-          
-          <nav className="p-4 space-y-2">
-            {[
-              { id: 'overview', label: 'Overview', icon: '📊' },
-              { id: 'tasks', label: 'Tasks', icon: '✅' },
-              { id: 'team', label: 'Team', icon: '👥' },
-              { id: 'calendar', label: 'Calendar', icon: '📅' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg font-semibold transition-colors ${
-                  activeTab === tab.id
-                    ? darkMode
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-blue-500 text-white'
-                    : darkMode
-                      ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-300'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
+          <Button
+            onClick={() => dispatch(handleTheme())}
+            variant="outline"
+            className={darkMode ? 'bg-blue-800 text-blue-200' : 'bg-blue-100 text-blue-800'}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </Button>
+        </header>
 
-          {/* Quick Stats */}
-          <div className={`p-4 mt-8 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg mx-4`}>
-            <h3 className="font-semibold mb-3">Quick Stats</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Progress</span>
-                <span className="font-bold text-blue-500">{projectData.progress}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Team Members</span>
-                <span>{teamMembers.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Active Tasks</span>
-                <span>{tasks.filter(t => t.status !== 'Completed').length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Upcoming Events</span>
-                <span>{calendarEvents.filter(e => new Date(e.startDate) > new Date()).length}</span>
-              </div>
-            </div>
-          </div>
+        {/* Tab Navigation */}
+        <div className={`flex space-x-4 mb-8 p-2 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
+          {[
+            { id: 'overview', label: 'Overview', icon: '📊' },
+            { id: 'tasks', label: 'Tasks', icon: '✅' },
+            { id: 'team', label: 'Team', icon: '👥' },
+            { id: 'calendar', label: 'Calendar', icon: '📅' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === tab.id
+                  ? darkMode
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-blue-600 text-white'
+                  : darkMode
+                    ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-300'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-8">
+        {/* Content Area */}
+        <div className="space-y-8">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold">Project Overview</h2>
-                <a 
-                  href={projectData.githubRepo} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                    darkMode 
-                      ? 'bg-gray-700 hover:bg-gray-600' 
-                      : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-                >
-                  🔗 GitHub Repository
-                </a>
-              </div>
+              {/* Project Info Card */}
+              <Card className={`border-0 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-2xl font-bold">{projectData.name}</CardTitle>
+                  <a 
+                    href={projectData.githubRepo} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                      darkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600' 
+                        : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                  >
+                    🔗 GitHub
+                  </a>
+                </CardHeader>
+                <CardContent>
+                  <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{projectData.description}</p>
+                </CardContent>
+              </Card>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Progress Section */}
-                <div className={`rounded-2xl shadow-xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                  <h3 className="text-xl font-bold mb-4">Project Progress</h3>
-                  <div className="mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Overall Completion</span>
-                      <span className="font-bold">{projectData.progress}%</span>
+                <Card className={`border-0 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+                  <CardHeader>
+                    <CardTitle>Project Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Overall Completion</span>
+                        <span className="font-bold">{projectData.progress}%</span>
+                      </div>
+                      <div className={`w-full rounded-full h-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                        <div 
+                          className="bg-blue-500 h-4 rounded-full transition-all duration-500"
+                          style={{ width: `${projectData.progress}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className={`w-full rounded-full h-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                      <div 
-                        className="bg-blue-500 h-4 rounded-full transition-all duration-500"
-                        style={{ width: `${projectData.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
 
-                  {/* Timeline */}
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">Project Timeline</h4>
+                    <h4 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Timeline
+                    </h4>
                     <div className="space-y-4">
                       {timelineStages.map((stage, index) => (
                         <div key={index} className="flex items-center">
@@ -569,17 +511,19 @@ const ProjectTracker = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* Recent Activity */}
-                <div className={`rounded-2xl shadow-xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                  <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-                  
-                  {/* Latest Commit */}
-                  <div className="mb-6">
-                    <h4 className="font-semibold mb-2">Latest Commit</h4>
-                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <Card className={`border-0 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                      Latest Commit
+                    </h4>
+                    <div className={`p-4 rounded-lg mb-6 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-mono text-sm">{projectData.lastCommit.hash}</span>
                         <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -600,272 +544,253 @@ const ProjectTracker = () => {
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Project Image */}
-                  <div>
-                    <h4 className="font-semibold mb-2">Current Build</h4>
+                    <h4 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                      Current Build
+                    </h4>
                     <img 
                       src={projectData.image} 
                       alt="Project" 
                       className="w-full h-48 object-cover rounded-lg"
                     />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           )}
 
           {/* Tasks Tab */}
           {activeTab === 'tasks' && (
-            <div className={`rounded-2xl shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Project Tasks</h2>
+            <Card className={`border-0 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <CardTitle className="text-2xl">Project Tasks</CardTitle>
                 {isLeader && (
-                  <button
+                  <Button
                     onClick={() => handleOpenForm('task')}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                      darkMode 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }`}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     + Add Task
-                  </button>
+                  </Button>
                 )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <th className="text-left p-4">Description</th>
-                      <th className="text-left p-4">Priority</th>
-                      <th className="text-left p-4">Assigned To</th>
-                      <th className="text-left p-4">Status</th>
-                      <th className="text-left p-4">Due Date</th>
-                      {isLeader && <th className="text-left p-4">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map((task) => {
-                      const assignedMember = getAssignedMember(task.assignedTo);
-                      return (
-                        <tr key={task.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                          <td className="p-4">{task.description}</td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getPriorityColor(task.priority)}`}>
-                              {task.priority}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            {assignedMember && (
-                              <div className="flex items-center space-x-2">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                                  darkMode ? 'bg-blue-600' : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {assignedMember.avatar}
-                                </div>
-                                <span>{assignedMember.name}</span>
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getStatusColor(task.status)}`}>
-                              {task.status}
-                            </span>
-                          </td>
-                          <td className="p-4">{task.dueDate}</td>
-                          {isLeader && (
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <th className="text-left p-4">Description</th>
+                        <th className="text-left p-4">Priority</th>
+                        <th className="text-left p-4">Assigned To</th>
+                        <th className="text-left p-4">Status</th>
+                        <th className="text-left p-4">Due Date</th>
+                        {isLeader && <th className="text-left p-4">Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.map((task) => {
+                        const assignedMember = getAssignedMember(task.assignedTo);
+                        return (
+                          <tr key={task.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                            <td className="p-4">{task.description}</td>
                             <td className="p-4">
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleOpenForm('task', task)}
-                                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                                    darkMode 
-                                      ? 'bg-yellow-600 hover:bg-yellow-700' 
-                                      : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                  }`}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteItem('task', task.id)}
-                                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                                    darkMode 
-                                      ? 'bg-red-600 hover:bg-red-700' 
-                                      : 'bg-red-500 hover:bg-red-600 text-white'
-                                  }`}
-                                >
-                                  Delete
-                                </button>
-                              </div>
+                              <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getPriorityColor(task.priority)}`}>
+                                {task.priority}
+                              </span>
                             </td>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                            <td className="p-4">
+                              {assignedMember && (
+                                <div className="flex items-center space-x-2">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                    darkMode ? 'bg-blue-600' : 'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {assignedMember.avatar}
+                                  </div>
+                                  <span>{assignedMember.name}</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getStatusColor(task.status)}`}>
+                                {task.status}
+                              </span>
+                            </td>
+                            <td className="p-4">{task.dueDate}</td>
+                            {isLeader && (
+                              <td className="p-4">
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleOpenForm('task', task)}
+                                    className="text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteItem('task', task.id)}
+                                    className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                                  >
+                                    Delete
+                                  </Button>
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Team Tab */}
           {activeTab === 'team' && (
-            <div className={`rounded-2xl shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Team Members</h2>
+            <Card className={`border-0 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <CardTitle className="text-2xl">Team Members</CardTitle>
                 {isLeader && (
-                  <button
+                  <Button
                     onClick={() => handleOpenForm('team')}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                      darkMode 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }`}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     + Add Member
-                  </button>
+                  </Button>
                 )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <th className="text-left p-4">Avatar</th>
-                      <th className="text-left p-4">Name</th>
-                      <th className="text-left p-4">Role</th>
-                      <th className="text-left p-4">Email</th>
-                      <th className="text-left p-4">Tasks Assigned</th>
-                      {isLeader && <th className="text-left p-4">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {teamMembers.map((member) => (
-                      <tr key={member.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <td className="p-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                            darkMode ? 'bg-blue-600' : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {member.avatar}
-                          </div>
-                        </td>
-                        <td className="p-4 font-medium">{member.name}</td>
-                        <td className="p-4">{member.role}</td>
-                        <td className="p-4">{member.email}</td>
-                        <td className="p-4">
-                          {tasks.filter(t => t.assignedTo === member.id).length}
-                        </td>
-                        {isLeader && (
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <th className="text-left p-4">Avatar</th>
+                        <th className="text-left p-4">Name</th>
+                        <th className="text-left p-4">Role</th>
+                        <th className="text-left p-4">Email</th>
+                        <th className="text-left p-4">Tasks Assigned</th>
+                        {isLeader && <th className="text-left p-4">Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teamMembers.map((member) => (
+                        <tr key={member.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                           <td className="p-4">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleOpenForm('team', member)}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                  darkMode 
-                                    ? 'bg-yellow-600 hover:bg-yellow-700' 
-                                    : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                }`}
-                              >
-                                Edit
-                              </button>
-                              {member.role !== 'Project Lead' && (
-                                <button
-                                  onClick={() => handleDeleteItem('team', member.id)}
-                                  className={`px-3 py-1 rounded text-sm transition-colors ${
-                                    darkMode 
-                                      ? 'bg-red-600 hover:bg-red-700' 
-                                      : 'bg-red-500 hover:bg-red-600 text-white'
-                                  }`}
-                                >
-                                  Remove
-                                </button>
-                              )}
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                              darkMode ? 'bg-blue-600' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {member.avatar}
                             </div>
                           </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                          <td className="p-4 font-medium">{member.name}</td>
+                          <td className="p-4">{member.role}</td>
+                          <td className="p-4">{member.email}</td>
+                          <td className="p-4">
+                            {tasks.filter(t => t.assignedTo === member.id).length}
+                          </td>
+                          {isLeader && (
+                            <td className="p-4">
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenForm('team', member)}
+                                  className="text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
+                                >
+                                  Edit
+                                </Button>
+                                {member.role !== 'Project Lead' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDeleteItem('team', member.id)}
+                                    className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                                  >
+                                    Remove
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Calendar Tab */}
           {activeTab === 'calendar' && (
-            <div className={`rounded-2xl shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Calendar Events</h2>
+            <Card className={`border-0 ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+              <CardHeader className="flex flex-row justify-between items-center">
+                <CardTitle className="text-2xl">Calendar Events</CardTitle>
                 {isLeader && (
-                  <button
+                  <Button
                     onClick={() => handleOpenForm('event')}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                      darkMode 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }`}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     + Add Event
-                  </button>
+                  </Button>
                 )}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <th className="text-left p-4">Title</th>
-                      <th className="text-left p-4">Description</th>
-                      <th className="text-left p-4">Type</th>
-                      <th className="text-left p-4">Start Date</th>
-                      <th className="text-left p-4">End Date</th>
-                      {isLeader && <th className="text-left p-4">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {calendarEvents.map((event) => (
-                      <tr key={event.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <td className="p-4 font-medium">{event.title}</td>
-                        <td className="p-4">{event.description}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getEventTypeColor(event.type)}`}>
-                            {event.type}
-                          </span>
-                        </td>
-                        <td className="p-4">{new Date(event.startDate).toLocaleString()}</td>
-                        <td className="p-4">{new Date(event.endDate).toLocaleString()}</td>
-                        {isLeader && (
-                          <td className="p-4">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleOpenForm('event', event)}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                  darkMode 
-                                    ? 'bg-yellow-600 hover:bg-yellow-700' 
-                                    : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                }`}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteItem('event', event.id)}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                  darkMode 
-                                    ? 'bg-red-600 hover:bg-red-700' 
-                                    : 'bg-red-500 hover:bg-red-600 text-white'
-                                }`}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        )}
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <th className="text-left p-4">Title</th>
+                        <th className="text-left p-4">Description</th>
+                        <th className="text-left p-4">Type</th>
+                        <th className="text-left p-4">Start Date</th>
+                        <th className="text-left p-4">End Date</th>
+                        {isLeader && <th className="text-left p-4">Actions</th>}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                    </thead>
+                    <tbody>
+                      {calendarEvents.map((event) => (
+                        <tr key={event.id} className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                          <td className="p-4 font-medium">{event.title}</td>
+                          <td className="p-4">{event.description}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${getEventTypeColor(event.type)}`}>
+                              {event.type}
+                            </span>
+                          </td>
+                          <td className="p-4">{new Date(event.startDate).toLocaleString()}</td>
+                          <td className="p-4">{new Date(event.endDate).toLocaleString()}</td>
+                          {isLeader && (
+                            <td className="p-4">
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenForm('event', event)}
+                                  className="text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteItem('event', event.id)}
+                                  className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

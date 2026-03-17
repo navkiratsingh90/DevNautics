@@ -109,10 +109,6 @@ const router = createBrowserRouter([
         path : '/notifications/chat',
         element : <ChatPage/>
       },
-      {
-        path : '/project-tracker',
-        element : <ProjectTracker/>
-      },
     ]
   },
   {
@@ -150,7 +146,12 @@ const router = createBrowserRouter([
       {
         path : '/user/:id/certifications',
         element : <CertificationsPage/>
-      }
+      },
+
+      {
+        path : '/user/:id/workspace',
+        element : <ProjectTracker/>
+      },
     ]
   }
 ])

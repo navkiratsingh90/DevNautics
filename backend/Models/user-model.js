@@ -64,6 +64,13 @@ const userSchema = new mongoose.Schema(
 
     challengesAttended: [{ type: mongoose.Schema.Types.ObjectId, ref: "Challenge" }],
     totalPoints: { type: Number, default: 0 },
+    googleAccessToken: {
+      type: String,
+    },
+    
+    googleRefreshToken: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
