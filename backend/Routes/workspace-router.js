@@ -3,7 +3,9 @@ import {
   getAuthUrl,
   getTokens,
   createCalendarEvent,
-} from "../services/googleCalendarService.js";
+  deleteCalendarEvent,
+  getCalendarEvents,
+} from "../utils/googleAuth.js";
 
 import {
   createNewProject,
@@ -18,13 +20,11 @@ import {
   getTopContributors,
   removeMember,
   deleteTask,
-} from "../controllers/projectTracker-controller.js";
+} from "../controllers/workspace-controller.js";
 
-import authMiddleware from "../middlewares/authMiddleware.js"; // ✅ Ensure authentication
+import authMiddleware from "../middlewares/auth-middleware.js"; // ✅ Ensure authentication
 
 const router = express.Router();
-
-/* -------------------- 📁 PROJECT ROUTES -------------------- */
 
 // ✅ Create new project
 router.post("/create", authMiddleware, createNewProject);
@@ -36,22 +36,16 @@ router.post("/add-members", authMiddleware, addMembers);
 router.put("/update/:projectId", authMiddleware, updateProject);
 
 // ✅ Get project by ID
-router.get("/:projectId", authMiddleware, getProjectById);
+router.get("/get/:projectId", authMiddleware, getProjectById);
 
 // ✅ Get projects by status
 router.get("/", authMiddleware, getProjectByStatus);
 
 // ✅ Delete a project
-router.delete("/:projectId", authMiddleware, deleteProjectById);
-
-
-/* -------------------- 👥 MEMBER MANAGEMENT -------------------- */
+router.delete("/delete/:projectId", authMiddleware, deleteProjectById);
 
 // ✅ Remove member from project
 router.delete("/remove-member", authMiddleware, removeMember);
-
-
-/* -------------------- ✅ TASK MANAGEMENT -------------------- */
 
 // ✅ Assign task to a member
 router.post("/assign-task", authMiddleware, assignTasks);
@@ -65,37 +59,41 @@ router.put("/task/complete", authMiddleware, markTaskCompleted);
 // ✅ Delete a task
 router.delete("/:projectId/task/:taskId", authMiddleware, deleteTask);
 
-
-/* -------------------- 📊 CONTRIBUTIONS -------------------- */
-
 // ✅ Get top contributors for a project
 router.get("/:projectId/top-contributors", authMiddleware, getTopContributors);
 
-
-/* -------------------- 🗓️ CALENDAR MANAGEMENT -------------------- */
-
-
-
 // 1. Redirect to Google Login
-router.get("/auth", (req, res) => {
-  const url = getAuthUrl();
+router.get("/auth",authMiddleware ,  (req, res) => {
+  const user = req.user.userID || req.user._id;
+  const url = getAuthUrl(user);
   res.redirect(url);
 });
 
 // 2. Callback
 router.get("/callback", async (req, res) => {
-  const code = req.query.code;
+  try {
+    const code = req.query.code;
+    const userId = req.query.state; // ⭐ get userId
 
-  const tokens = await getTokens(code);
+    const { access_token, refresh_token, expiry_date } =
+      await getTokens(code);
 
-  // 👉 store tokens in DB (important)
-  console.log(tokens);
+    // 🔥 Update user in DB
+    await User.findByIdAndUpdate(userId, {
+      googleAccessToken: access_token,
+      googleRefreshToken: refresh_token,
+      googleTokenExpiry: expiry_date,
+    });
 
-  res.send("Connected Successfully ✅");
+    res.send("Google Calendar Connected Successfully ✅");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("OAuth Failed ❌");
+  }
 });
 
 // 3. Create Event
-router.post("/create-event", async (req, res) => {
+router.post("/create-event/:id", async (req, res) => {
  const user = req.user.userID || req.user._id;
 
   const event = await createCalendarEvent({
@@ -108,6 +106,29 @@ router.post("/create-event", async (req, res) => {
   });
 
   res.json(event);
+});
+
+router.delete("/event/:eventId", async (req, res) => {
+  const result = await deleteCalendarEvent({
+    accessToken: req.user.googleAccessToken,
+    refreshToken: req.user.googleRefreshToken,
+    eventId: req.params.eventId,
+  });
+
+  res.json(result);
+});
+
+router.get("/events/:id", async (req, res) => {
+  const events = await getCalendarEvents({
+    accessToken: req.user.googleAccessToken,
+    refreshToken: req.user.googleRefreshToken,
+  });
+
+  const filtered = events.filter(e =>
+    e.description?.includes(`workspaceId:${req.params.workspaceId}`)
+  );
+
+  res.json(filtered);
 });
 
 export default router;

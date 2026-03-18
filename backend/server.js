@@ -34,12 +34,14 @@ import userRouter from './routes/user-router.js'
 import discussionRouter from './routes/discussion-router.js'
 // import collabSpaceRouter from './routes/projectCollab-router.js'
 import projectCollabRouter from './routes/projectCollab-router.js'
+import workspaceRouter from './routes/workspace-router.js'
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter)
 app.use("/api/activity", activityRouter)
 app.use("/api/discussion", discussionRouter);
 app.use("/api/collab", projectCollabRouter)
+app.use("/api/workspace", workspaceRouter)
 
 // ✅ Serve React frontend build (for production)
 // app.use(express.static(path.join(__dirname, "/frontend/dist")));

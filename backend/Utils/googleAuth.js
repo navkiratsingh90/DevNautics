@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import dotenv from "dotenv";
+import Workspace from "../models/workspace-model.js";
 
 dotenv.config();
 
@@ -10,34 +11,29 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
-// ==============================
-// 1. Get Google Auth URL
-// ==============================
-export const getAuthUrl = () => {
+
+export const getAuthUrl = (userId) => {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/calendar"],
+    state: userId, 
   });
 };
 
-// ==============================
-// 2. Get Tokens from Code
-// ==============================
+
+// Get Tokens from Code
 export const getTokens = async (code) => {
   const { tokens } = await oauth2Client.getToken(code);
   return tokens;
 };
 
-// ==============================
+
 // 3. Set Credentials
-// ==============================
 export const setCredentials = (tokens) => {
   oauth2Client.setCredentials(tokens);
 };
 
-// ==============================
 // 4. Create Event
-// ==============================
 export const createCalendarEvent = async ({
   accessToken,
   refreshToken,
@@ -46,16 +42,17 @@ export const createCalendarEvent = async ({
   startDate,
   endDate,
 }) => {
+  const workspaceId = req.params.id
   oauth2Client.setCredentials({
     access_token: accessToken,
     refresh_token: refreshToken,
   });
-
+  const targetWorkspace = await Workspace.findById(workspaceId)
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
-
+  const finalDescription = `${description} | workspaceId:${workspaceId}`
   const event = {
     summary: title,
-    description,
+    finalDescription,
     start: {
       dateTime: startDate,
     },
@@ -72,9 +69,7 @@ export const createCalendarEvent = async ({
   return response.data;
 };
 
-// ==============================
 // 5. Get Events
-// ==============================
 export const getCalendarEvents = async ({
   accessToken,
   refreshToken,
@@ -93,9 +88,8 @@ export const getCalendarEvents = async ({
   return response.data.items;
 };
 
-// ==============================
+
 // 6. Delete Event
-// ==============================
 export const deleteCalendarEvent = async ({
   accessToken,
   refreshToken,

@@ -71,6 +71,9 @@ const userSchema = new mongoose.Schema(
     googleRefreshToken: {
       type: String,
     },
+    googleTokenExpiry: {
+      type : Date
+    }
   },
   { timestamps: true }
 );

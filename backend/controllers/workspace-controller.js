@@ -1,5 +1,5 @@
 import User from "../models/user-model.js";
-import ProjectTracker from "../models/projectTracker-model.js";
+import ProjectTracker from '../models/workspace-model.js'
 
 // controller which i will be making...
 
@@ -404,111 +404,111 @@ export const getTopContributors = async (req, res) => {
 };
 
 //
-export const addCalendarEvent = async (req, res) => {
-    try {
-        const { projectId } = req.params;
-        const { title, description, startDate, endDate, assignedMembers, type } = req.body;
-        const userId = req.user;
+// export const addCalendarEvent = async (req, res) => {
+//     try {
+//         const { projectId } = req.params;
+//         const { title, description, startDate, endDate, assignedMembers, type } = req.body;
+//         const userId = req.user;
 
-        const project = await ProjectTracker.findById(projectId);
-        if (!project) return res.status(404).json({ msg: "Project not found" });
+//         const project = await ProjectTracker.findById(projectId);
+//         if (!project) return res.status(404).json({ msg: "Project not found" });
 
-        if (project.leader.toString() !== userId.toString()) {
-            return res.status(403).json({ msg: "Only leader can add events" });
-        }
+//         if (project.leader.toString() !== userId.toString()) {
+//             return res.status(403).json({ msg: "Only leader can add events" });
+//         }
 
-        const newEvent = {
-            title,
-            description,
-            startDate,
-            endDate,
-            assignedMembers,
-            type
-        };
+//         const newEvent = {
+//             title,
+//             description,
+//             startDate,
+//             endDate,
+//             assignedMembers,
+//             type
+//         };
 
-        project.calendar.push(newEvent);
-        await project.save();
+//         project.calendar.push(newEvent);
+//         await project.save();
 
-        res.status(200).json({ msg: "Event added successfully", event: newEvent });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: "Internal server error" });
-    }
-};
+//         res.status(200).json({ msg: "Event added successfully", event: newEvent });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ msg: "Internal server error" });
+//     }
+// };
 
-export const updateCalendarEvent = async (req, res) => {
-    try {
-        const { projectId, eventId } = req.params;
-        const { title, description, startDate, endDate, assignedMembers, type } = req.body;
-        const userId = req.user;
+// export const updateCalendarEvent = async (req, res) => {
+//     try {
+//         const { projectId, eventId } = req.params;
+//         const { title, description, startDate, endDate, assignedMembers, type } = req.body;
+//         const userId = req.user;
 
-        const project = await ProjectTracker.findById(projectId);
-        if (!project) return res.status(404).json({ msg: "Project not found" });
+//         const project = await ProjectTracker.findById(projectId);
+//         if (!project) return res.status(404).json({ msg: "Project not found" });
 
-        const event = project.calendar.id(eventId);
-        if (!event) return res.status(404).json({ msg: "Event not found" });
+//         const event = project.calendar.id(eventId);
+//         if (!event) return res.status(404).json({ msg: "Event not found" });
 
-        if (project.leader.toString() !== userId.toString()) {
-            return res.status(403).json({ msg: "Only leader can edit events" });
-        }
+//         if (project.leader.toString() !== userId.toString()) {
+//             return res.status(403).json({ msg: "Only leader can edit events" });
+//         }
 
-        event.title = title || event.title;
-        event.description = description || event.description;
-        event.startDate = startDate || event.startDate;
-        event.endDate = endDate || event.endDate;
-        event.assignedMembers = assignedMembers || event.assignedMembers;
-        event.type = type || event.type;
+//         event.title = title || event.title;
+//         event.description = description || event.description;
+//         event.startDate = startDate || event.startDate;
+//         event.endDate = endDate || event.endDate;
+//         event.assignedMembers = assignedMembers || event.assignedMembers;
+//         event.type = type || event.type;
 
-        await project.save();
+//         await project.save();
 
-        res.status(200).json({ msg: "Event updated", event });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: "Internal server error" });
-    }
-};
+//         res.status(200).json({ msg: "Event updated", event });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ msg: "Internal server error" });
+//     }
+// };
 
-export const deleteCalendarEvent = async (req, res) => {
-    try {
-        const { projectId, eventId } = req.params;
-        const userId = req.user;
+// export const deleteCalendarEvent = async (req, res) => {
+//     try {
+//         const { projectId, eventId } = req.params;
+//         const userId = req.user;
 
-        const project = await ProjectTracker.findById(projectId);
-        if (!project) return res.status(404).json({ msg: "Project not found" });
+//         const project = await ProjectTracker.findById(projectId);
+//         if (!project) return res.status(404).json({ msg: "Project not found" });
 
-        if (project.leader.toString() !== userId.toString()) {
-            return res.status(403).json({ msg: "Only leader can delete events" });
-        }
+//         if (project.leader.toString() !== userId.toString()) {
+//             return res.status(403).json({ msg: "Only leader can delete events" });
+//         }
 
-        project.calendar = project.calendar.filter(
-            (event) => event._id.toString() !== eventId
-        );
+//         project.calendar = project.calendar.filter(
+//             (event) => event._id.toString() !== eventId
+//         );
 
-        await project.save();
+//         await project.save();
 
-        res.status(200).json({ msg: "Event deleted successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: "Internal server error" });
-    }
-};
+//         res.status(200).json({ msg: "Event deleted successfully" });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ msg: "Internal server error" });
+//     }
+// };
 
-export const getProjectCalendar = async (req, res) => {
-    try {
-        const { projectId } = req.params;
-        const project = await ProjectTracker.findById(projectId).populate("calendar.assignedMembers", "name email");
+// export const getProjectCalendar = async (req, res) => {
+//     try {
+//         const { projectId } = req.params;
+//         const project = await ProjectTracker.findById(projectId).populate("calendar.assignedMembers", "name email");
 
-        if (!project) return res.status(404).json({ msg: "Project not found" });
+//         if (!project) return res.status(404).json({ msg: "Project not found" });
 
-        res.status(200).json({
-            msg: "Calendar fetched successfully",
-            events: project.calendar
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: "Internal server error" });
-    }
-};
+//         res.status(200).json({
+//             msg: "Calendar fetched successfully",
+//             events: project.calendar
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ msg: "Internal server error" });
+//     }
+// };
 
 export const removeMember = async (req, res) => {
     try {
